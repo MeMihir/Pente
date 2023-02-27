@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <random>
+#include <utility>
 using namespace std;
 
 class engine
@@ -20,6 +22,7 @@ public:
 	void makeMove(int pos1, int pos2, int currrntTurn);
 	void check_capture(int row, int col, int color);
 	bool check_win(int color, int row, int col);
+	pair<int, int> placeRandomPiece();
 };
 
 engine::engine(bool agentTile, float timeLimit)
@@ -47,15 +50,18 @@ void engine::playGame()
 			cout << generatePenteBoard() << endl;
 			cout << "Your Turn\n:	";
 			cin >> pos1 >> pos2;
+			makeMove(pos1, pos2, currentTurn % 2);
 		}
 		else
 		{
-
+			pair<int, int> move = placeRandomPiece();
+			makeMove(move.first, move.second, currentTurn % 2);
 		}
 		currentTurn++;
 	}
 }
 
+// make a move
 void engine::makeMove(int pos1, int pos2, int currentTurn)
 {
 	int currColor = currentTurn + 1;
@@ -71,6 +77,7 @@ void engine::makeMove(int pos1, int pos2, int currentTurn)
 	}
 }
 
+// check for captures
 void engine::check_capture(int row, int col, int color)
 {
 	int opponent = (color == 1) ? 2 : 1; // determine the opponent's color
@@ -104,7 +111,7 @@ void engine::check_capture(int row, int col, int color)
 	}
 
 	// check for captures diagonally
-	if (row > 2 && col > 3 && board[row - 1][col - 1] == opponent && board[row - 2][col - 2] == opponent && board[row - 3][col - 3] == color)
+	if (row > 2 && col > 2 && board[row - 1][col - 1] == opponent && board[row - 2][col - 2] == opponent && board[row - 3][col - 3] == color)
 	{
 		board[row - 1][col - 1] = 0;
 		board[row - 2][col - 2] = 0;
@@ -122,7 +129,7 @@ void engine::check_capture(int row, int col, int color)
 		board[row - 2][col + 2] = 0;
 		color == 1 ? blackCaptures++ : whiteCaptures++;
 	}
-	if (board[row + 1][col - 1] == opponent && board[row + 2][col - 2] == opponent && board[row + 3][col - 3] == color)
+	if (row < 16 && col > 2 && board[row + 1][col - 1] == opponent && board[row + 2][col - 2] == opponent && board[row + 3][col - 3] == color)
 	{
 		board[row + 2][col - 2] = 0;
 		board[row + 3][col - 3] = 0;
@@ -130,64 +137,106 @@ void engine::check_capture(int row, int col, int color)
 	}
 }
 
-bool engine::check_win(int color, int row, int col) {
-    // check for horizontal wins
-    int count = 0;
-    for (int c = max(0, col-4); c <= min(18, col+4); c++) {
-        if (board[row][c] == color) {
-            count++;
-            if (count >= 5) {
-                return true;
-            }
-        } else {
-            count = 0;
-        }
-    }
-    
-    // check for vertical wins
-    count = 0;
-    for (int r = max(0, row-4); r <= min(18, row+4); r++) {
-        if (board[r][col] == color) {
-            count++;
-            if (count >= 5) {
-                return true;
-            }
-        } else {
-            count = 0;
-        }
-    }
-    
-    // check for diagonal wins (top-left to bottom-right)
-    count = 0;
-    for (int r = row-min(row, col), c = col-min(row, col); r <= min(18-row, 18-col) && c <= min(18-row, 18-col); r++, c++) {
-        if (board[r][c] == color) {
-            count++;
-            if (count >= 5) {
-                return true;
-            }
-        } else {
-            count = 0;
-        }
-    }
-    
-    // check for diagonal wins (bottom-left to top-right)
-    count = 0;
-    for (int r = row+min(18-row, col), c = col-min(18-row, col); r >= max(0, row-4) && c <= min(18, col+4); r--, c++) {
-        if (board[r][c] == color) {
-            count++;
-            if (count >= 5) {
-                return true;
-            }
-        } else {
-            count = 0;
-        }
-    }
-    
-    // if no win was found, return false
-    return false;
+// check for a win
+bool engine::check_win(int color, int row, int col)
+{
+
+	// check for capture wins
+	if (whiteCaptures == 5 || blackCaptures == 5)
+		return true;
+
+	// check for horizontal wins
+	int count = 0;
+	for (int c = max(0, col - 4); c <= min(18, col + 4); c++)
+	{
+		if (board[row][c] == color)
+		{
+			count++;
+			if (count >= 5)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			count = 0;
+		}
+	}
+
+	// check for vertical wins
+	count = 0;
+	for (int r = max(0, row - 4); r <= min(18, row + 4); r++)
+	{
+		if (board[r][col] == color)
+		{
+			count++;
+			if (count >= 5)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			count = 0;
+		}
+	}
+
+	// check for diagonal wins (top-left to bottom-right)
+	count = 0;
+	for (int r = row - min(row, col), c = col - min(row, col); r <= min(18 - row, 18 - col) && c <= min(18 - row, 18 - col); r++, c++)
+	{
+		if (board[r][c] == color)
+		{
+			count++;
+			if (count >= 5)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			count = 0;
+		}
+	}
+
+	// check for diagonal wins (bottom-left to top-right)
+	count = 0;
+	for (int r = row + min(18 - row, col), c = col - min(18 - row, col); r >= max(0, row - 4) && c <= min(18, col + 4); r--, c++)
+	{
+		if (board[r][c] == color)
+		{
+			count++;
+			if (count >= 5)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			count = 0;
+		}
+	}
+
+	// if no win was found, return false
+	return false;
 }
 
+// Places a random piece on the board
+pair<int, int> engine::placeRandomPiece()
+{
+	random_device rd;
+	mt19937 gen(rd());
+	uniform_int_distribution<> distrib(0, 18);
+	int row, col;
+	do
+	{
+		row = distrib(gen);
+		col = distrib(gen);
+	} while (board[row][col] != 0);
+	return make_pair(row, col);
+}
 
+// Generates a string representation of the board
 string engine::generatePenteBoard()
 {
 	string output = "";
@@ -217,12 +266,13 @@ int main()
 {
 	bool firstPlayer;
 	float timeLimit;
-	cout << "Your Choice (B=0/W=1)\n: ";
+	cout << "Your Choice (B=0/W=1)\t: ";
 	cin >> firstPlayer;
-	cout << "Time limit (in seconds)\n: ";
+	cout << "Time limit (in seconds)\t: ";
 	cin >> timeLimit;
 
 	engine game(firstPlayer, timeLimit);
+	game.playGame();
 
 	return 0;
 }
