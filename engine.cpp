@@ -41,7 +41,7 @@ engine::~engine()
 
 void engine::playGame()
 {
-	int currentTurn = 0;
+	int currentTurn = 1;
 	while (true)
 	{
 		if (currentTurn % 2 != agentTile)
@@ -183,7 +183,7 @@ bool engine::check_win(int color, int row, int col)
 
 	// check for diagonal wins (top-left to bottom-right)
 	count = 0;
-	for (int r = row - min(row, col), c = col - min(row, col); r <= min(18 - row, 18 - col) && c <= min(18 - row, 18 - col); r++, c++)
+	for (int r = max(0, row - 4), c = max(0, col - 4); r <= min(18, row + 4) && c <= min(18, col + 4); r++, c++)
 	{
 		if (board[r][c] == color)
 		{
@@ -201,7 +201,7 @@ bool engine::check_win(int color, int row, int col)
 
 	// check for diagonal wins (bottom-left to top-right)
 	count = 0;
-	for (int r = row + min(18 - row, col), c = col - min(18 - row, col); r >= max(0, row - 4) && c <= min(18, col + 4); r--, c++)
+	for (int r = min(18, row + 4), c = max(0, col - 4); r >= max(0, row - 4) && c <= min(18, col + 4); r--, c++)
 	{
 		if (board[r][c] == color)
 		{
