@@ -15,13 +15,17 @@ private:
     int agentTile; // 1 = black, 2 = white
 
     // Hyperparameters
-
+    int maxDepth = 3;
 public:
     agent(string path);
     ~agent();
     void printData();
+    void playGame();
+    int alphaBeta(vector<vector<int>> currBoard, int depth, int alpha, int beta, bool isMaximizing);
 };
 
+
+// CONSTRUCTOR
 agent::agent(string path)
 {
     freopen(path.c_str(), "r", stdin);
@@ -54,6 +58,9 @@ agent::~agent()
     fclose(stdin);
 }
 
+
+// PRINTING FUNCTIONS
+// prints all data
 void agent::printData()
 {
     cout << "Agent Tile\t: " << agentTile << endl;
@@ -71,6 +78,84 @@ void agent::printData()
     }
 }
 
+void agent::playGame()
+{
+    while (true)
+    {
+        int bestValue = -1000;
+        int bestRow = -1;
+        int bestCol = -1;
+        for (size_t i = 0; i < 19; i++)
+        {
+            for (size_t j = 0; j < 19; j++)
+            {
+                if (board[i][j] == 0)
+                {
+                    board[i][j] = agentTile;
+                    int value = alphaBeta(board, maxDepth, -1000, 1000, false);
+                    board[i][j] = 0;
+                    if (value > bestValue)
+                    {
+                        bestValue = value;
+                        bestRow = i;
+                        bestCol = j;
+                    }
+                }
+            }
+        }
+        cout << bestRow << " " << bestCol << endl;
+    }
+}
+
+// ALPHA BETA
+int agent::alphaBeta(vector<vector<int>> currBoard, int depth, int alpha, int beta, bool isMaximizing)
+{
+    if (depth == 0)
+        return randomHeuristic();
+
+    if (isMaximizing)
+    {
+        int bestValue = -1000;
+        for (size_t i = 0; i < 19; i++)
+        {
+            for (size_t j = 0; j < 19; j++)
+            {
+                if (currBoard[i][j] == 0)
+                {
+                    currBoard[i][j] = agentTile;
+                    int value = alphaBeta(currBoard, depth - 1, alpha, beta, false);
+                    currBoard[i][j] = 0;
+                    bestValue = max(bestValue, value);
+                    alpha = max(alpha, bestValue);
+                    if (beta <= alpha)
+                        break;
+                }
+            }
+        }
+        return bestValue;
+    }
+    else
+    {
+        int bestValue = 1000;
+        for (size_t i = 0; i < 19; i++)
+        {
+            for (size_t j = 0; j < 19; j++)
+            {
+                if (currBoard[i][j] == 0)
+                {
+                    currBoard[i][j] = agentTile == 1 ? 2 : 1;
+                    int value = alphaBeta(currBoard, depth - 1, alpha, beta, true);
+                    currBoard[i][j] = 0;
+                    bestValue = min(bestValue, value);
+                    beta = min(beta, bestValue);
+                    if (beta <= alpha)
+                        break;
+                }
+            }
+        }
+        return bestValue;
+    }
+}
 
 // returns random number between 0 and 500
 int randomHeuristic()
@@ -78,10 +163,12 @@ int randomHeuristic()
     return rand() % 500;
 }
 
+// MAIN
 int main()
 {
     agent a("input/input.txt");
     a.printData(); // LOG
+    a.playGame();
 
     return 0;
 }
