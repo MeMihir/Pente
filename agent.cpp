@@ -23,6 +23,7 @@ public:
     void printData();
     void playGame();
     int alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int beta, bool isMaximizing);
+    int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing);
 };
 
 // CONSTRUCTOR
@@ -80,37 +81,17 @@ void agent::printData()
     }
 }
 
-void agent::playGame()
+int agent::evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing)
 {
-    int bestValue = -1000;
-    int bestRow = -1;
-    int bestCol = -1;
-    for (size_t i = 0; i < 19; i++)
-    {
-        for (size_t j = 0; j < 19; j++)
-        {
-            if (board[i][j] == 0)
-            {
-                board[i][j] = agentTile;
-                int value = alphaBeta(board, maxDepth, -1000, 1000, false);
-                board[i][j] = 0;
-                if (value > bestValue)
-                {
-                    bestValue = value;
-                    bestRow = i;
-                    bestCol = j;
-                }
-            }
-        }
-    }
-    cout << bestRow << " " << bestCol << endl;
+    return centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
+    // return randomHeuristic();
 }
 
 // ALPHA BETA
 int agent::alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int beta, bool isMaximizing)
 {
     if (depth == 0)
-        return centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
+        return evaluateBoard(currBoard, isMaximizing);
 
     if (isMaximizing)
     {
@@ -154,6 +135,32 @@ int agent::alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int b
         }
         return bestValue;
     }
+}
+
+void agent::playGame()
+{
+    int bestValue = -1000;
+    int bestRow = -1;
+    int bestCol = -1;
+    for (size_t i = 0; i < 19; i++)
+    {
+        for (size_t j = 0; j < 19; j++)
+        {
+            if (board[i][j] == 0)
+            {
+                board[i][j] = agentTile;
+                int value = alphaBeta(board, maxDepth, -1000, 1000, false);
+                board[i][j] = 0;
+                if (value > bestValue)
+                {
+                    bestValue = value;
+                    bestRow = i;
+                    bestCol = j;
+                }
+            }
+        }
+    }
+    cout << bestRow << " " << bestCol << endl;
 }
 
 // MAIN
