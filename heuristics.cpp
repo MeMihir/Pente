@@ -20,7 +20,7 @@ int centralHeuristic(vector<vector<int> > board, int tile)
         {
             if(board[i][j] == tile)
             {
-                heuristic += (3 - i)*(3 - j);
+                heuristic += 100 - ((9-i)*(9-i) + (9-j)*(9-j));
             }
         }
     }

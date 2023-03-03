@@ -27,9 +27,11 @@ public:
     ~agent();
     void printData();
     void playGame();
-    int alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int beta, bool isMaximizing);
+    int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, int alpha, int beta, bool isMaximizing);
     int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing);
     vector<pii> getChildren(vector<vector<int> > currBoard);
+    pair<vector<vector<int> >, int> checkCaptures(vector<vector<int> > currBoard, int row, int col, int color);
+    bool checkWin(vector<vector<int> > currBoard, int wCaps, int bCaps, int color, int row, int col);
 };
 
 // CONSTRUCTOR
@@ -90,6 +92,153 @@ int agent::evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing)
     // return randomHeuristic();
 }
 
+// Capture Functions
+pair<vector<vector<int> >, int> agent::checkCaptures(vector<vector<int> > currBoard, int row, int col, int color)
+{
+	int opponent = (color == 1) ? 2 : 1; // determine the opponent's color
+    int numCaptures = 0;
+
+	// check for captures horizontally
+	if (col > 2 && currBoard[row][col - 1] == opponent && currBoard[row][col - 2] == opponent && currBoard[row][col - 3] == color)
+	{
+		currBoard[row][col - 1] = 0;
+		currBoard[row][col - 2] = 0;
+        numCaptures++;
+	}
+	if (col < 16 && currBoard[row][col + 1] == opponent && currBoard[row][col + 2] == opponent && currBoard[row][col + 3] == color)
+	{
+		currBoard[row][col + 1] = 0;
+		currBoard[row][col + 2] = 0;
+        numCaptures++;
+	}
+
+	// check for captures vertically
+	if (row > 2 && currBoard[row - 1][col] == opponent && currBoard[row - 2][col] == opponent && currBoard[row - 3][col] == color)
+	{
+		currBoard[row - 1][col] = 0;
+		currBoard[row - 2][col] = 0;
+        numCaptures++;
+	}
+	if (row < 16 && currBoard[row + 1][col] == opponent && currBoard[row + 2][col] == opponent && currBoard[row + 3][col] == color)
+	{
+		currBoard[row + 1][col] = 0;
+		currBoard[row + 2][col] = 0;
+        numCaptures++;
+	}
+
+	// check for captures diagonally
+	if (row > 2 && col > 2 && currBoard[row - 1][col - 1] == opponent && currBoard[row - 2][col - 2] == opponent && currBoard[row - 3][col - 3] == color)
+	{
+		currBoard[row - 1][col - 1] = 0;
+		currBoard[row - 2][col - 2] = 0;
+        numCaptures++;
+	}
+	if (row < 16 && col < 16 && currBoard[row + 1][col + 1] == opponent && currBoard[row + 2][col + 2] == opponent && currBoard[row + 3][col + 3] == color)
+	{
+		currBoard[row + 1][col + 1] = 0;
+		currBoard[row + 2][col + 2] = 0;
+        numCaptures++;
+	}
+	if (row > 2 && col < 16 && currBoard[row - 1][col + 1] == opponent && currBoard[row - 2][col + 2] == opponent && currBoard[row - 3][col + 3] == color)
+	{
+		currBoard[row - 1][col + 1] = 0;
+		currBoard[row - 2][col + 2] = 0;
+        numCaptures++;
+	}
+	if (row < 16 && col > 2 && currBoard[row + 1][col - 1] == opponent && currBoard[row + 2][col - 2] == opponent && currBoard[row + 3][col - 3] == color)
+	{
+		currBoard[row + 2][col - 2] = 0;
+		currBoard[row + 3][col - 3] = 0;
+        numCaptures++;
+	}
+    
+    return make_pair(currBoard, numCaptures);
+}
+
+// Check Win Function
+bool agent::checkWin(vector<vector<int> > currBoard, int wCaps, int bCaps, int color, int row, int col)
+{
+
+	// check for capture wins
+	if (wCaps == 5 || bCaps == 5)
+		return true;
+
+	// check for horizontal wins
+	int count = 0;
+	for (int c = max(0, col - 4); c <= min(18, col + 4); c++)
+	{
+		if (board[row][c] == color)
+		{
+			count++;
+			if (count >= 5)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			count = 0;
+		}
+	}
+
+	// check for vertical wins
+	count = 0;
+	for (int r = max(0, row - 4); r <= min(18, row + 4); r++)
+	{
+		if (board[r][col] == color)
+		{
+			count++;
+			if (count >= 5)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			count = 0;
+		}
+	}
+
+	// check for diagonal wins (top-left to bottom-right)
+	count = 0;
+	for (int r = max(0, row - 4), c = max(0, col - 4); r <= min(18, row + 4) && c <= min(18, col + 4); r++, c++)
+	{
+		if (board[r][c] == color)
+		{
+			count++;
+			if (count >= 5)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			count = 0;
+		}
+	}
+
+	// check for diagonal wins (bottom-left to top-right)
+	count = 0;
+	for (int r = min(18, row + 4), c = max(0, col - 4); r >= max(0, row - 4) && c <= min(18, col + 4); r--, c++)
+	{
+		if (board[r][c] == color)
+		{
+			count++;
+			if (count >= 5)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			count = 0;
+		}
+	}
+
+	// if no win was found, return false
+	return false;
+}
+
 // Get Child Board positions
 vector<pii> agent::getChildren(vector<vector<int> > currBoard)
 {
@@ -129,7 +278,7 @@ vector<pii> agent::getChildren(vector<vector<int> > currBoard)
 }
 
 // ALPHA BETA
-int agent::alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int beta, bool isMaximizing)
+int agent::alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, int alpha, int beta, bool isMaximizing)
 {
     if (depth == 0)
         return evaluateBoard(currBoard, isMaximizing);
@@ -143,8 +292,13 @@ int agent::alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int b
         for (size_t i = 0; i < children.size(); i++)
         {
             currBoard[children[i].first][children[i].second] = agentTile;
+            pair<vector<vector<int> >, int> result = checkCaptures(currBoard, children[i].first, children[i].second, agentTile);
+            if(checkWin(board, wCaps, bCaps, agentTile, children[i].first, children[i].second))
+                return 1000;
+            agentTile == 1 ? bCaps += result.second : wCaps += result.second;
             // printBoard(board); // DEBUG
-            int value = alphaBeta(currBoard, depth - 1, alpha, beta, false);
+
+            int value = alphaBeta(currBoard, wCaps, bCaps, depth - 1, alpha, beta, false);
             currBoard[children[i].first][children[i].second] = 0;
             bestValue = max(bestValue, value);
             alpha = max(alpha, bestValue);
@@ -163,8 +317,13 @@ int agent::alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int b
         for (size_t i = 0; i < children.size(); i++)
         {
             currBoard[children[i].first][children[i].second] = agentTile == 1 ? 2 : 1;
+            pair<vector<vector<int> >, int> result = checkCaptures(currBoard, children[i].first, children[i].second, agentTile == 1 ? 2 : 1);
+            agentTile == 1 ? wCaps += result.second : bCaps += result.second;
+            if(checkWin(board, wCaps, bCaps, agentTile == 1 ? 2 : 1, children[i].first, children[i].second))
+                return -1000;
             // printBoard(board); // DEBUG
-            int value = alphaBeta(currBoard, depth - 1, alpha, beta, true);
+
+            int value = alphaBeta(currBoard, wCaps, bCaps, depth - 1, alpha, beta, true);
             currBoard[children[i].first][children[i].second] = 0;
             bestValue = max(bestValue, value);
             beta = min(beta, bestValue);
@@ -189,7 +348,7 @@ void agent::playGame()
     {
         board[children[i].first][children[i].second] = agentTile;
         // printBoard(board); // DEBUG
-        int value = alphaBeta(board, maxDepth, -1000, 1000, false);
+        int value = alphaBeta(board, whiteCaptures, blackCaptures, maxDepth, -1000, 1000, false);
         board[children[i].first][children[i].second] = 0;
         if (value > bestValue)
         {
@@ -208,7 +367,7 @@ int main()
 {
     agent a("input/input.txt");
     a.printData(); // DEBUG
-    // a.playGame();
+    a.playGame();
 
     return 0;
 }
