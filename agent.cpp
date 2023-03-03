@@ -1,9 +1,13 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
-#include "heuristics.h"
+#include <utility>
 
 using namespace std;
+#include "heuristics.h"
+#include "helpers.h"
+
+#define pii pair<int, int>
 
 class agent
 {
@@ -17,6 +21,7 @@ private:
 
     // Hyperparameters
     int maxDepth;
+
 public:
     agent(string path);
     ~agent();
@@ -24,6 +29,7 @@ public:
     void playGame();
     int alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int beta, bool isMaximizing);
     int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing);
+    vector<pii> getChildren(vector<vector<int> > currBoard);
 };
 
 // CONSTRUCTOR
@@ -53,7 +59,7 @@ agent::agent(string path)
         }
     }
 
-    maxDepth = 2;
+    maxDepth = 3;
 }
 
 agent::~agent()
@@ -61,8 +67,8 @@ agent::~agent()
     fclose(stdin);
 }
 
-
-// PRINTING FUNCTIONS
+// ============================================================================================================================================
+// TODO:PRINTING FUNCTIONS
 // prints all data
 void agent::printData()
 {
@@ -71,20 +77,55 @@ void agent::printData()
     cout << "White Captures\t: " << whiteCaptures << endl;
     cout << "Black Captures\t: " << blackCaptures << endl;
     cout << "Board: " << endl;
-    for (size_t i = 0; i < 19; i++)
-    {
-        for (size_t j = 0; j < 19; j++)
-        {
-            cout << board[i][j] << " ";
-        }
-        cout << endl;
-    }
+    printBoard(board);
 }
 
+// ============================================================================================================================================
+// TODO:GAMEPLAY FUNCTIONS
+// Eval Functions
 int agent::evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing)
 {
-    return centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
+    return centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2
+                                                                                 : 1);
     // return randomHeuristic();
+}
+
+// Get Child Board positions
+vector<pii> agent::getChildren(vector<vector<int> > currBoard)
+{
+    vector<pii> children;
+    vector<pii> range(19, pair<int, int>(19, -1)); // [start, end] inclusive
+
+    for (int i = 0; i < 19; i++)
+    {
+        for (int j = 0; j < 19; j++)
+        {
+            if (currBoard[i][j] != 0)
+            {
+                int startR = max(0, i - 4);
+                int endR = min(18, i + 4);
+
+                for (int k = startR; k <= endR; k++)
+                {
+                    range[k].first = max(0, min(range[k].first, j - 4));
+                    range[k].second = min(18, max(range[k].second, j + 4));
+                }
+            }
+        }
+    }
+
+    // printPairs(range); // DEBUG
+
+    for (int i = 0; i < 19; i++)
+    {
+        for (int j = range[i].first; j <= range[i].second; j++)
+        {
+            if (currBoard[i][j] == 0)
+                children.push_back(make_pair(i, j));
+        }
+    }
+
+    return children;
 }
 
 // ALPHA BETA
@@ -96,79 +137,78 @@ int agent::alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int b
     if (isMaximizing)
     {
         int bestValue = -1000;
-        for (size_t i = 0; i < 19; i++)
+        vector<pii> children = getChildren(currBoard);
+        // cout << children.size() << endl; // DEBUG
+
+        for (size_t i = 0; i < children.size(); i++)
         {
-            for (size_t j = 0; j < 19; j++)
-            {
-                if (currBoard[i][j] == 0)
-                {
-                    currBoard[i][j] = agentTile;
-                    int value = alphaBeta(currBoard, depth - 1, alpha, beta, false);
-                    currBoard[i][j] = 0;
-                    bestValue = max(bestValue, value);
-                    alpha = max(alpha, bestValue);
-                    if (beta <= alpha)
-                        break;
-                }
-            }
+            currBoard[children[i].first][children[i].second] = agentTile;
+            // printBoard(board); // DEBUG
+            int value = alphaBeta(currBoard, depth - 1, alpha, beta, false);
+            currBoard[children[i].first][children[i].second] = 0;
+            bestValue = max(bestValue, value);
+            alpha = max(alpha, bestValue);
+            if (beta <= alpha)
+                break;
         }
+
         return bestValue;
     }
     else
     {
         int bestValue = 1000;
-        for (size_t i = 0; i < 19; i++)
+        vector<pii> children = getChildren(currBoard);
+        // cout << children.size() << endl; // DEBUG
+
+        for (size_t i = 0; i < children.size(); i++)
         {
-            for (size_t j = 0; j < 19; j++)
-            {
-                if (currBoard[i][j] == 0)
-                {
-                    currBoard[i][j] = agentTile == 1 ? 2 : 1;
-                    int value = alphaBeta(currBoard, depth - 1, alpha, beta, true);
-                    currBoard[i][j] = 0;
-                    bestValue = min(bestValue, value);
-                    beta = min(beta, bestValue);
-                    if (beta <= alpha)
-                        break;
-                }
-            }
+            currBoard[children[i].first][children[i].second] = agentTile == 1 ? 2 : 1;
+            // printBoard(board); // DEBUG
+            int value = alphaBeta(currBoard, depth - 1, alpha, beta, true);
+            currBoard[children[i].first][children[i].second] = 0;
+            bestValue = max(bestValue, value);
+            beta = min(beta, bestValue);
+            if (beta <= alpha)
+                break;
         }
         return bestValue;
     }
 }
 
+// PLAY GAME
 void agent::playGame()
 {
     int bestValue = -1000;
     int bestRow = -1;
     int bestCol = -1;
-    for (size_t i = 0; i < 19; i++)
+
+    vector<pii> children = getChildren(board);
+    // cout << children.size() << endl; // DEBUG
+
+    for (size_t i = 0; i < children.size(); i++)
     {
-        for (size_t j = 0; j < 19; j++)
+        board[children[i].first][children[i].second] = agentTile;
+        // printBoard(board); // DEBUG
+        int value = alphaBeta(board, maxDepth, -1000, 1000, false);
+        board[children[i].first][children[i].second] = 0;
+        if (value > bestValue)
         {
-            if (board[i][j] == 0)
-            {
-                board[i][j] = agentTile;
-                int value = alphaBeta(board, maxDepth, -1000, 1000, false);
-                board[i][j] = 0;
-                if (value > bestValue)
-                {
-                    bestValue = value;
-                    bestRow = i;
-                    bestCol = j;
-                }
-            }
+            bestValue = value;
+            bestRow = children[i].first;
+            bestCol = children[i].second;
         }
     }
-    cout << bestRow << " " << bestCol << endl;
+
+    cout << bestRow << " " << bestCol << endl; // DEBUG
 }
 
-// MAIN
+// ============================================================================================================================================
+// TODO:MAIN
 int main()
 {
     agent a("input/input.txt");
-    a.printData(); // LOG
-    a.playGame();
+    a.printData(); // DEBUG
+    // a.playGame();
 
     return 0;
 }
