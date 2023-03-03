@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cstdlib>
+#include "heuristics.h"
 
 using namespace std;
 
@@ -8,22 +9,21 @@ class agent
 {
 private:
     // Inputs
-    vector<vector<int>> board; // 1 = black, 2 = white, 0 = empty
+    vector<vector<int> > board; // 1 = black, 2 = white, 0 = empty
     int whiteCaptures;
     int blackCaptures;
     double time;
     int agentTile; // 1 = black, 2 = white
 
     // Hyperparameters
-    int maxDepth = 3;
+    int maxDepth;
 public:
     agent(string path);
     ~agent();
     void printData();
     void playGame();
-    int alphaBeta(vector<vector<int>> currBoard, int depth, int alpha, int beta, bool isMaximizing);
+    int alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int beta, bool isMaximizing);
 };
-
 
 // CONSTRUCTOR
 agent::agent(string path)
@@ -38,7 +38,7 @@ agent::agent(string path)
     cin >> captures;
     whiteCaptures = captures[0] - '0';
     blackCaptures = captures[2] - '0';
-    board = vector<vector<int>>(19, vector<int>(19, 0));
+    board = vector<vector<int> >(19, vector<int>(19, 0));
     for (size_t i = 0; i < 19; i++)
     {
         for (size_t j = 0; j < 19; j++)
@@ -51,6 +51,8 @@ agent::agent(string path)
                 board[i][j] = 1;
         }
     }
+
+    maxDepth = 2;
 }
 
 agent::~agent()
@@ -80,38 +82,35 @@ void agent::printData()
 
 void agent::playGame()
 {
-    while (true)
+    int bestValue = -1000;
+    int bestRow = -1;
+    int bestCol = -1;
+    for (size_t i = 0; i < 19; i++)
     {
-        int bestValue = -1000;
-        int bestRow = -1;
-        int bestCol = -1;
-        for (size_t i = 0; i < 19; i++)
+        for (size_t j = 0; j < 19; j++)
         {
-            for (size_t j = 0; j < 19; j++)
+            if (board[i][j] == 0)
             {
-                if (board[i][j] == 0)
+                board[i][j] = agentTile;
+                int value = alphaBeta(board, maxDepth, -1000, 1000, false);
+                board[i][j] = 0;
+                if (value > bestValue)
                 {
-                    board[i][j] = agentTile;
-                    int value = alphaBeta(board, maxDepth, -1000, 1000, false);
-                    board[i][j] = 0;
-                    if (value > bestValue)
-                    {
-                        bestValue = value;
-                        bestRow = i;
-                        bestCol = j;
-                    }
+                    bestValue = value;
+                    bestRow = i;
+                    bestCol = j;
                 }
             }
         }
-        cout << bestRow << " " << bestCol << endl;
     }
+    cout << bestRow << " " << bestCol << endl;
 }
 
 // ALPHA BETA
-int agent::alphaBeta(vector<vector<int>> currBoard, int depth, int alpha, int beta, bool isMaximizing)
+int agent::alphaBeta(vector<vector<int> > currBoard, int depth, int alpha, int beta, bool isMaximizing)
 {
     if (depth == 0)
-        return randomHeuristic();
+        return centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
 
     if (isMaximizing)
     {
@@ -155,12 +154,6 @@ int agent::alphaBeta(vector<vector<int>> currBoard, int depth, int alpha, int be
         }
         return bestValue;
     }
-}
-
-// returns random number between 0 and 500
-int randomHeuristic()
-{
-    return rand() % 500;
 }
 
 // MAIN
