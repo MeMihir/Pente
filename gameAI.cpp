@@ -216,9 +216,9 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
         {
             currBoard[children[i].first][children[i].second] = agentTile;
             pair<vector<vector<int> >, int> result = checkCaptures(currBoard, children[i].first, children[i].second, agentTile);
+            agentTile == 1 ? bCaps += result.second : wCaps += result.second;
             if(checkWin(currBoard, wCaps, bCaps, agentTile, children[i].first, children[i].second))
                 return 1000;
-            agentTile == 1 ? bCaps += result.second : wCaps += result.second;
             // printBoard(board); // DEBUG
 
             int value = alphaBeta(currBoard, wCaps, bCaps, depth - 1, alpha, beta, false, agentTile);

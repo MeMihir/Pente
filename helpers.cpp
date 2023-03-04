@@ -25,3 +25,13 @@ void printPairs(vector<pair<int, int> > moves)
         cout << moves[i].first << " " << moves[i].second << endl;
     }
 }
+
+// print 1d vector
+void printVector(vector<int> moves)
+{
+    for (size_t i = 0; i < moves.size(); i++)
+    {
+        cout << moves[i] << " ";
+    }
+    cout << endl;
+}
