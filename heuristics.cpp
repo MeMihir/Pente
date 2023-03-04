@@ -231,5 +231,8 @@ int slidingHeuristic::slidingWindowHeuristicFull()
             }
         }
     }
-    return heuristic;
+    if(tile == 1)
+        return heuristic - whiteCaptures*1000 + blackCaptures*1000;
+    else
+        return heuristic - blackCaptures*1000 + whiteCaptures*1000;
 }

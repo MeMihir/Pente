@@ -2,17 +2,23 @@
 #include <vector>
 #include <cstdlib>
 #include <utility>
+#include <unordered_map>
 
 using namespace std;
 #include "heuristics.h"
 
 #define pii pair<int, int>
 
+
+// Heuristic Hashmap
+unordered_map<int, int> boardHeuristic;
+
 // Evaluate Board
-int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing, int agentTile)
+int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing, int agentTile, int whiteCaptures=0, int blackCapture=0)
 {
-    return centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2
-                                                                                 : 1);
+    // return centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
+	slidingHeuristic heuristic(currBoard, agentTile, whiteCaptures, blackCapture);
+	return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
 }
 
 // Capture Functions
@@ -204,13 +210,15 @@ vector<pii> getChildren(vector<vector<int> > currBoard)
 int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, int alpha, int beta, bool isMaximizing, int agentTile)
 {
     if (depth == 0)
-        return evaluateBoard(currBoard, isMaximizing, agentTile);
+        return evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps);
 
     if (isMaximizing)
     {
         int bestValue = -1000;
         vector<pii> children = getChildren(currBoard);
         // cout << children.size() << endl; // DEBUG
+
+		// ?MOVE ORDERING
 
         for (size_t i = 0; i < children.size(); i++)
         {

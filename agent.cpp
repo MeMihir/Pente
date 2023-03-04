@@ -2,6 +2,7 @@
 #include <vector>
 #include <cstdlib>
 #include <utility>
+#include <chrono>
 
 using namespace std;
 #include "heuristics.h"
@@ -58,7 +59,7 @@ agent::agent(string path)
         }
     }
 
-    maxDepth = 3;
+    maxDepth = 2;
 }
 
 agent::~agent()
@@ -122,7 +123,14 @@ int main()
 {
     agent a("input/input.txt");
     a.printData(); // DEBUG
+    auto start = chrono::high_resolution_clock::now();
     a.playGame();
+    auto end = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    int minutes = chrono::duration_cast<chrono::minutes>(duration).count();
+    int seconds = chrono::duration_cast<chrono::seconds>(duration).count() - minutes * 60;
+    int milliseconds = chrono::duration_cast<chrono::milliseconds>(duration).count() - minutes * 60 * 1000 - seconds * 1000;
+    cout << "Time taken: " << minutes << " minutes " << seconds << " seconds " << milliseconds << " milliseconds" << endl;
 
     return 0;
 }
