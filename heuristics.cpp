@@ -20,13 +20,13 @@ int randomHeuristic()
 int centralHeuristic(vector<vector<int> > board, int tile)
 {
     int heuristic = 0;
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < 19; i++)
     {
-        for (int j = 0; j < 5; j++)
+        for (int j = 0; j < 19; j++)
         {
             if (board[i][j] == tile)
             {
-                heuristic += 100 - ((9 - i) * (9 - i) + (9 - j) * (9 - j));
+                heuristic += 200 - ((9 - i) * (9 - i) + (9 - j) * (9 - j));
             }
         }
     }

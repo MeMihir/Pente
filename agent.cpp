@@ -6,6 +6,7 @@
 #include <random>
 #include <string>
 #include <tuple>
+#include <queue>
 
 using namespace std;
 #include "hashing.h"
@@ -89,11 +90,11 @@ void agent::printData()
 // Eval Functions
 int agent::evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing)
 {
-    // return centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2
-    //                                                                              : 1);
+    int heuristic = centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
+    return isMaximizing ? heuristic : -heuristic;
     // return randomHeuristic();
-    slidingHeuristic heuristic(currBoard, agentTile, whiteCaptures, blackCaptures);
-	return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
+    // slidingHeuristic heuristic(currBoard, agentTile, whiteCaptures, blackCaptures);
+	// return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
 }
 
 // PLAY GAME
@@ -106,29 +107,38 @@ void agent::playGame()
     ZobristHash zobristHash(board);
     // cout<<zobristHash.hash()<<endl; // DEBUG
 
+    cout<<centralHeuristic(board, agentTile)<<endl; // DEBUG
+
     vector<pii> children;
     vector<pii> range;
+    priority_queue<pair<int, pii> > moveOrder;
 	tie(children, range) = getChildren(board);
     // cout << children.size() << endl; // DEBUG
 
+    moveOrder = moveOrderingMax(children, board, agentTile, maxDepth, -1000, 1000, true, whiteCaptures, blackCaptures, zobristHash);
 
-    for (size_t i = 0; i < children.size(); i++)
+    while(!moveOrder.empty())
     {
-        board[children[i].first][children[i].second] = agentTile;
+        int heuristic = moveOrder.top().first;
+        pii child = moveOrder.top().second;
+        moveOrder.pop();
+        // cout << heuristic << " " << child.first << " " << child.second << endl; // DEBUG
+
+        board[child.first][child.second] = agentTile;
         vector<vector<int> > currBoard = board;
         int numCaps;
 
         uint64_t oldHash = zobristHash.hash();
-        zobristHash.updateHash(children[i].first, children[i].second, agentTile); // update hash for move
+        zobristHash.updateHash(child.first, child.second, agentTile); // update hash for move
         uint64_t hash;
         pair<int, uint64_t> temp;
 
-        tie(currBoard, temp) = checkCaptures(currBoard, children[i].first, children[i].second, agentTile, zobristHash);
+        tie(currBoard, temp) = checkCaptures(currBoard, child.first, child.second, agentTile, zobristHash);
         tie(numCaps, hash) = temp;
         agentTile == 1 ? blackCaptures += numCaps : whiteCaptures += numCaps;
-        if(checkWin(currBoard, whiteCaptures, blackCaptures, agentTile, children[i].first, children[i].second))
+        if(checkWin(currBoard, whiteCaptures, blackCaptures, agentTile, child.first, child.second))
         {
-            cout << children[i].first << " " << children[i].second << endl;
+            cout << child.first << " " << child.second << endl;
             return;
         }
             
@@ -136,18 +146,19 @@ void agent::playGame()
         
         zobristHash.updateHash(hash); // update hash for captures
         // cout<<zobristHash.hash()<<" "; // DEBUG
-        int value = alphaBeta(result.first, whiteCaptures, blackCaptures, maxDepth, -1000, 1000, false, agentTile, zobristHash);
         
-        board[children[i].first][children[i].second] = 0;
+        int value = alphaBeta(currBoard, whiteCaptures, blackCaptures, maxDepth, -1000, 1000, false, agentTile, zobristHash);
+        
+        board[child.first][child.second] = 0;
         agentTile == 1 ? blackCaptures -= numCaps : whiteCaptures -= numCaps;
         zobristHash.updateHash(oldHash); // update hash for undoing move
-        // cout<<zobristHash.hash()<<endl; // DEBUG
+        cout<<zobristHash.hash()<<endl; // DEBUG
 
         if (value > bestValue)
         {
             bestValue = value;
-            bestRow = children[i].first;
-            bestCol = children[i].second;
+            bestRow = child.first;
+            bestCol = child.second;
         }
     }
 
