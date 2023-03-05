@@ -4,68 +4,16 @@
 #include <utility>
 #include <chrono>
 #include <random>
+#include <string>
+#include <tuple>
 
 using namespace std;
 #include "heuristics.h"
 #include "helpers.h"
 #include "gameAI.h"
+#include "hashing.h"
 
 #define pii pair<int, int>
-
-// ============================================================================================================================================
-// TODO:ZOBRIST HASHING
-
-class ZobristHash
-{
-private:
-    vector<vector<vector<uint64_t> > > hashTable;
-    int SEED;
-    uint64_t boardHash;
-public:
-    ZobristHash(vector<vector<int> > board) {
-        hashTable = vector<vector<vector<uint64_t> > >(19, vector<vector<uint64_t> >(19, vector<uint64_t>(3)));
-        boardHash = 0;
-        SEED = 123456789;
-
-        for (size_t i = 0; i < 19; i++)
-        {
-            for (size_t j = 0; j < 19; j++)
-            {
-                for (size_t k = 0; k < 3; k++)
-                {
-                    hashTable[i][j][k] = rand_uint64();
-                }
-            }
-        }
-
-        for (size_t i = 0; i < 19; i++)
-        {
-            for (size_t j = 0; j < 19; j++)
-            {
-                boardHash ^= hashTable[i][j][board[i][j]];
-            }
-        }
-    }
-
-    ~ZobristHash() {
-        // delete hash table
-    }
-
-    uint64_t rand_uint64() {
-        static mt19937_64 rng(SEED);
-        return rng();
-    }
-
-    // update hash after a move
-    void updateHash(int row, int col, int tile) {
-        boardHash ^= hashTable[row][col][tile];
-    }
-
-    uint64_t hash() const {
-        return boardHash;
-    }
-};
-
 
 class agent
 {
