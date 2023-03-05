@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <utility>
 #include <chrono>
+#include <random>
 
 using namespace std;
 #include "heuristics.h"
@@ -10,6 +11,61 @@ using namespace std;
 #include "gameAI.h"
 
 #define pii pair<int, int>
+
+// ============================================================================================================================================
+// TODO:ZOBRIST HASHING
+
+class ZobristHash
+{
+private:
+    vector<vector<vector<uint64_t> > > hashTable;
+    int SEED;
+    uint64_t boardHash;
+public:
+    ZobristHash(vector<vector<int> > board) {
+        hashTable = vector<vector<vector<uint64_t> > >(19, vector<vector<uint64_t> >(19, vector<uint64_t>(3)));
+        boardHash = 0;
+        SEED = 123456789;
+
+        for (size_t i = 0; i < 19; i++)
+        {
+            for (size_t j = 0; j < 19; j++)
+            {
+                for (size_t k = 0; k < 3; k++)
+                {
+                    hashTable[i][j][k] = rand_uint64();
+                }
+            }
+        }
+
+        for (size_t i = 0; i < 19; i++)
+        {
+            for (size_t j = 0; j < 19; j++)
+            {
+                boardHash ^= hashTable[i][j][board[i][j]];
+            }
+        }
+    }
+
+    ~ZobristHash() {
+        // delete hash table
+    }
+
+    uint64_t rand_uint64() {
+        static mt19937_64 rng(SEED);
+        return rng();
+    }
+
+    // update hash after a move
+    void updateHash(int row, int col, int tile) {
+        boardHash ^= hashTable[row][col][tile];
+    }
+
+    uint64_t hash() const {
+        return boardHash;
+    }
+};
+
 
 class agent
 {
@@ -97,14 +153,28 @@ void agent::playGame()
     int bestRow = -1;
     int bestCol = -1;
 
-    vector<pii> children = getChildren(board);
+    ZobristHash zobristHash(board);
+    // cout<<zobristHash.hash()<<endl; // DEBUG
+
+    vector<pii> children;
+    vector<pii> range;
+	tie(children, range) = getChildren(board);
     // cout << children.size() << endl; // DEBUG
+
 
     for (size_t i = 0; i < children.size(); i++)
     {
         board[children[i].first][children[i].second] = agentTile;
+        pair<vector<vector<int> >, int> result = checkCaptures(board, children[i].first, children[i].second, agentTile);
+        agentTile == 1 ? blackCaptures += result.second : whiteCaptures += result.second;
+        if(checkWin(result.first, whiteCaptures, blackCaptures, agentTile, children[i].first, children[i].second))
+        {
+            cout << children[i].first << " " << children[i].second << endl;
+            return;
+        }
+            
         // printBoard(board); // DEBUG
-        int value = alphaBeta(board, whiteCaptures, blackCaptures, maxDepth, -1000, 1000, false, agentTile);
+        int value = alphaBeta(result.first, whiteCaptures, blackCaptures, maxDepth, -1000, 1000, false, agentTile);
         board[children[i].first][children[i].second] = 0;
         if (value > bestValue)
         {

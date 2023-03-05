@@ -169,7 +169,7 @@ bool checkWin(vector<vector<int> > currBoard, int wCaps, int bCaps, int color, i
 }
 
 // Get Child Board positions
-vector<pii> getChildren(vector<vector<int> > currBoard)
+pair<vector<pii>, vector<pii> > getChildren(vector<vector<int> > currBoard)
 {
     vector<pii> children;
     vector<pii> range(19, pair<int, int>(19, -1)); // [start, end] inclusive
@@ -203,7 +203,7 @@ vector<pii> getChildren(vector<vector<int> > currBoard)
         }
     }
 
-    return children;
+    return make_pair(children, range);
 }
 
 // ALPHA BETA
@@ -212,11 +212,15 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
     if (depth == 0)
         return evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps);
 
+	
+	vector<pii> children;
+	vector<pii> range;
+	tie(children, range) = getChildren(currBoard);
+
     if (isMaximizing)
     {
         int bestValue = -1000;
-        vector<pii> children = getChildren(currBoard);
-        // cout << children.size() << endl; // DEBUG
+		// cout << children.size() << endl; // DEBUG
 
 		// ?MOVE ORDERING
 
@@ -225,7 +229,7 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
             currBoard[children[i].first][children[i].second] = agentTile;
             pair<vector<vector<int> >, int> result = checkCaptures(currBoard, children[i].first, children[i].second, agentTile);
             agentTile == 1 ? bCaps += result.second : wCaps += result.second;
-            if(checkWin(currBoard, wCaps, bCaps, agentTile, children[i].first, children[i].second))
+            if(checkWin(result.first, wCaps, bCaps, agentTile, children[i].first, children[i].second))
                 return 1000;
             // printBoard(board); // DEBUG
 
@@ -242,7 +246,6 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
     else
     {
         int bestValue = 1000;
-        vector<pii> children = getChildren(currBoard);
         // cout << children.size() << endl; // DEBUG
 
         for (size_t i = 0; i < children.size(); i++)
@@ -250,7 +253,7 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
             currBoard[children[i].first][children[i].second] = agentTile == 1 ? 2 : 1;
             pair<vector<vector<int> >, int> result = checkCaptures(currBoard, children[i].first, children[i].second, agentTile == 1 ? 2 : 1);
             agentTile == 1 ? wCaps += result.second : bCaps += result.second;
-            if(checkWin(currBoard, wCaps, bCaps, agentTile == 1 ? 2 : 1, children[i].first, children[i].second))
+            if(checkWin(result.first, wCaps, bCaps, agentTile == 1 ? 2 : 1, children[i].first, children[i].second))
                 return -1000;
             // printBoard(board); // DEBUG
 
