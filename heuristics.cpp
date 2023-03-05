@@ -9,6 +9,7 @@ using namespace std;
 
 #define infi 1000000000
 #define ninfi -1000000000
+#define pii pair<int, int>
 
 // returns random number between 0 and 500
 int randomHeuristic()
@@ -213,6 +214,36 @@ int slidingHeuristic::slidingWindowHeuristicFull()
     for (int i = 0; i < 19; i++)
     {
         for (int j = 0; j < 19; j++)
+        {
+            vector<int> hash5s = hashWindow5(i, j);
+            vector<int> hash4s = hashWindow4(i, j);
+            for (int k = 0; k < 4; k++)
+            {  
+                if(tile == 1) {
+                    heuristic += heuristicWindow5B[hash5s[k]] - heuristicWindow5W[hash5s[k]];
+                    heuristic += heuristicWindow4B[hash4s[k]] - heuristicWindow4W[hash4s[k]];
+                    heuristic += checkOpen4s(i, j, 1);
+                }
+                else {
+                    heuristic += heuristicWindow5W[hash5s[k]] - heuristicWindow5B[hash5s[k]];
+                    heuristic += heuristicWindow4W[hash4s[k]] - heuristicWindow4B[hash4s[k]];
+                    heuristic += checkOpen4s(i, j, 2);
+                }
+            }
+        }
+    }
+    if(tile == 1)
+        return heuristic - whiteCaptures*1000 + blackCaptures*1000;
+    else
+        return heuristic - blackCaptures*1000 + whiteCaptures*1000;
+}
+
+int slidingHeuristic::slidingWindowHeuristicPartial(int i, int j, vector<pii>range)
+{
+    int heuristic = 0;
+    for (int i = 0; i < 19; i++)
+    {
+        for (int j = range[i].first ; j < range[i].second; j++)
         {
             vector<int> hash5s = hashWindow5(i, j);
             vector<int> hash4s = hashWindow4(i, j);

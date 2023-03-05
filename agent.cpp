@@ -8,10 +8,10 @@
 #include <tuple>
 
 using namespace std;
+#include "hashing.h"
 #include "heuristics.h"
 #include "helpers.h"
 #include "gameAI.h"
-#include "hashing.h"
 
 #define pii pair<int, int>
 
@@ -89,9 +89,11 @@ void agent::printData()
 // Eval Functions
 int agent::evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing)
 {
-    return centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2
-                                                                                 : 1);
+    // return centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2
+    //                                                                              : 1);
     // return randomHeuristic();
+    slidingHeuristic heuristic(currBoard, agentTile, whiteCaptures, blackCaptures);
+	return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
 }
 
 // PLAY GAME
@@ -113,17 +115,34 @@ void agent::playGame()
     for (size_t i = 0; i < children.size(); i++)
     {
         board[children[i].first][children[i].second] = agentTile;
-        pair<vector<vector<int> >, int> result = checkCaptures(board, children[i].first, children[i].second, agentTile);
-        agentTile == 1 ? blackCaptures += result.second : whiteCaptures += result.second;
-        if(checkWin(result.first, whiteCaptures, blackCaptures, agentTile, children[i].first, children[i].second))
+        vector<vector<int> > currBoard = board;
+        int numCaps;
+
+        uint64_t oldHash = zobristHash.hash();
+        zobristHash.updateHash(children[i].first, children[i].second, agentTile); // update hash for move
+        uint64_t hash;
+        pair<int, uint64_t> temp;
+
+        tie(currBoard, temp) = checkCaptures(currBoard, children[i].first, children[i].second, agentTile, zobristHash);
+        tie(numCaps, hash) = temp;
+        agentTile == 1 ? blackCaptures += numCaps : whiteCaptures += numCaps;
+        if(checkWin(currBoard, whiteCaptures, blackCaptures, agentTile, children[i].first, children[i].second))
         {
             cout << children[i].first << " " << children[i].second << endl;
             return;
         }
             
         // printBoard(board); // DEBUG
-        int value = alphaBeta(result.first, whiteCaptures, blackCaptures, maxDepth, -1000, 1000, false, agentTile);
+        
+        zobristHash.updateHash(hash); // update hash for captures
+        // cout<<zobristHash.hash()<<" "; // DEBUG
+        int value = alphaBeta(result.first, whiteCaptures, blackCaptures, maxDepth, -1000, 1000, false, agentTile, zobristHash);
+        
         board[children[i].first][children[i].second] = 0;
+        agentTile == 1 ? blackCaptures -= numCaps : whiteCaptures -= numCaps;
+        zobristHash.updateHash(oldHash); // update hash for undoing move
+        // cout<<zobristHash.hash()<<endl; // DEBUG
+
         if (value > bestValue)
         {
             bestValue = value;

@@ -3,15 +3,15 @@
 #include <cstdlib>
 #include <utility>
 #include <unordered_map>
+#include <string>
+#include <tuple>
+#include <queue>
 
 using namespace std;
 #include "heuristics.h"
+#include "hashing.h"
 
 #define pii pair<int, int>
-
-
-// Heuristic Hashmap
-unordered_map<int, int> boardHeuristic;
 
 // Evaluate Board
 int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing, int agentTile, int whiteCaptures=0, int blackCapture=0)
@@ -22,7 +22,7 @@ int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing, int agentTi
 }
 
 // Capture Functions
-pair<vector<vector<int> >, int> checkCaptures(vector<vector<int> > currBoard, int row, int col, int color)
+pair<vector<vector<int> >, pair<int, uint64_t> > checkCaptures(vector<vector<int> > currBoard, int row, int col, int color, ZobristHash hasher)
 {
 	int opponent = (color == 1) ? 2 : 1; // determine the opponent's color
     int numCaptures = 0;
@@ -32,12 +32,16 @@ pair<vector<vector<int> >, int> checkCaptures(vector<vector<int> > currBoard, in
 	{
 		currBoard[row][col - 1] = 0;
 		currBoard[row][col - 2] = 0;
+		hasher.updateHash(row, col - 1, 0);
+		hasher.updateHash(row, col - 2, 0);
         numCaptures++;
 	}
 	if (col < 16 && currBoard[row][col + 1] == opponent && currBoard[row][col + 2] == opponent && currBoard[row][col + 3] == color)
 	{
 		currBoard[row][col + 1] = 0;
 		currBoard[row][col + 2] = 0;
+		hasher.updateHash(row, col + 1, 0);
+		hasher.updateHash(row, col + 2, 0);
         numCaptures++;
 	}
 
@@ -46,12 +50,16 @@ pair<vector<vector<int> >, int> checkCaptures(vector<vector<int> > currBoard, in
 	{
 		currBoard[row - 1][col] = 0;
 		currBoard[row - 2][col] = 0;
+		hasher.updateHash(row - 1, col, 0);
+		hasher.updateHash(row - 2, col, 0);
         numCaptures++;
 	}
 	if (row < 16 && currBoard[row + 1][col] == opponent && currBoard[row + 2][col] == opponent && currBoard[row + 3][col] == color)
 	{
 		currBoard[row + 1][col] = 0;
 		currBoard[row + 2][col] = 0;
+		hasher.updateHash(row + 1, col, 0);
+		hasher.updateHash(row + 2, col, 0);
         numCaptures++;
 	}
 
@@ -60,28 +68,36 @@ pair<vector<vector<int> >, int> checkCaptures(vector<vector<int> > currBoard, in
 	{
 		currBoard[row - 1][col - 1] = 0;
 		currBoard[row - 2][col - 2] = 0;
+		hasher.updateHash(row - 1, col - 1, 0);
+		hasher.updateHash(row - 2, col - 2, 0);
         numCaptures++;
 	}
 	if (row < 16 && col < 16 && currBoard[row + 1][col + 1] == opponent && currBoard[row + 2][col + 2] == opponent && currBoard[row + 3][col + 3] == color)
 	{
 		currBoard[row + 1][col + 1] = 0;
 		currBoard[row + 2][col + 2] = 0;
+		hasher.updateHash(row + 1, col + 1, 0);
+		hasher.updateHash(row + 2, col + 2, 0);
         numCaptures++;
 	}
 	if (row > 2 && col < 16 && currBoard[row - 1][col + 1] == opponent && currBoard[row - 2][col + 2] == opponent && currBoard[row - 3][col + 3] == color)
 	{
 		currBoard[row - 1][col + 1] = 0;
 		currBoard[row - 2][col + 2] = 0;
+		hasher.updateHash(row - 1, col + 1, 0);
+		hasher.updateHash(row - 2, col + 2, 0);
         numCaptures++;
 	}
 	if (row < 16 && col > 2 && currBoard[row + 1][col - 1] == opponent && currBoard[row + 2][col - 2] == opponent && currBoard[row + 3][col - 3] == color)
 	{
 		currBoard[row + 2][col - 2] = 0;
 		currBoard[row + 3][col - 3] = 0;
+		hasher.updateHash(row + 1, col - 1, 0);
+		hasher.updateHash(row + 2, col - 2, 0);
         numCaptures++;
 	}
     
-    return make_pair(currBoard, numCaptures);
+    return make_pair(currBoard, make_pair(numCaptures, hasher.hash()));
 }
 
 // Check Win Function
@@ -207,7 +223,7 @@ pair<vector<pii>, vector<pii> > getChildren(vector<vector<int> > currBoard)
 }
 
 // ALPHA BETA
-int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, int alpha, int beta, bool isMaximizing, int agentTile)
+int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, int alpha, int beta, bool isMaximizing, int agentTile, ZobristHash hasher)
 {
     if (depth == 0)
         return evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps);
@@ -227,15 +243,31 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
         for (size_t i = 0; i < children.size(); i++)
         {
             currBoard[children[i].first][children[i].second] = agentTile;
-            pair<vector<vector<int> >, int> result = checkCaptures(currBoard, children[i].first, children[i].second, agentTile);
-            agentTile == 1 ? bCaps += result.second : wCaps += result.second;
-            if(checkWin(result.first, wCaps, bCaps, agentTile, children[i].first, children[i].second))
+			vector<vector<int> > newBoard = currBoard;
+			int numCaptures;
+			
+			uint64_t oldHash = hasher.hash(); // get old hash
+        	hasher.updateHash(children[i].first, children[i].second, agentTile); // update hash for move
+			uint64_t hash;
+			pair<int, uint64_t> temp;
+
+            tie(newBoard, temp) = checkCaptures(currBoard, children[i].first, children[i].second, agentTile, hasher);
+			tie(numCaptures, hash) = temp;
+
+            agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
+            if(checkWin(newBoard, wCaps, bCaps, agentTile, children[i].first, children[i].second))
                 return 1000;
             // printBoard(board); // DEBUG
 
-            int value = alphaBeta(currBoard, wCaps, bCaps, depth - 1, alpha, beta, false, agentTile);
+			hasher.updateHash(hash); // update hash for captures
+            int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, false, agentTile, hasher);
+
+
             currBoard[children[i].first][children[i].second] = 0;
-            bestValue = max(bestValue, value);
+            agentTile == 1 ? bCaps -= numCaptures : wCaps -= numCaptures; // undo captures
+			hasher.updateHash(oldHash); // update hash for undoing move
+			
+			bestValue = max(bestValue, value);
             alpha = max(alpha, bestValue);
             if (beta <= alpha)
                 break;
@@ -250,15 +282,29 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
 
         for (size_t i = 0; i < children.size(); i++)
         {
-            currBoard[children[i].first][children[i].second] = agentTile == 1 ? 2 : 1;
-            pair<vector<vector<int> >, int> result = checkCaptures(currBoard, children[i].first, children[i].second, agentTile == 1 ? 2 : 1);
-            agentTile == 1 ? wCaps += result.second : bCaps += result.second;
-            if(checkWin(result.first, wCaps, bCaps, agentTile == 1 ? 2 : 1, children[i].first, children[i].second))
+            currBoard[children[i].first][children[i].second] = agentTile;
+			vector<vector<int> > newBoard = currBoard;
+			int numCaptures;
+			
+			uint64_t oldHash = hasher.hash(); // get old hash
+        	hasher.updateHash(children[i].first, children[i].second, agentTile); // update hash for move
+			uint64_t hash;
+			pair<int, uint64_t> temp;
+
+            tie(newBoard, temp) = checkCaptures(currBoard, children[i].first, children[i].second, agentTile == 1 ? 2 : 1, hasher);
+			tie(numCaptures, hash) = temp;
+            agentTile == 1 ? wCaps += numCaptures : bCaps += numCaptures;
+            if(checkWin(newBoard, wCaps, bCaps, agentTile == 1 ? 2 : 1, children[i].first, children[i].second))
                 return -1000;
             // printBoard(board); // DEBUG
+			
+			hasher.updateHash(hash); // update hash for captures
+            int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, true, agentTile, hasher);
 
-            int value = alphaBeta(currBoard, wCaps, bCaps, depth - 1, alpha, beta, true, agentTile);
             currBoard[children[i].first][children[i].second] = 0;
+			agentTile == 1 ? wCaps -= numCaptures : bCaps -= numCaptures; // undo captures
+			hasher.updateHash(oldHash); // update hash for undoing move
+
             bestValue = max(bestValue, value);
             beta = min(beta, bestValue);
             if (beta <= alpha)

@@ -46,6 +46,10 @@ void ZobristHash::updateHash(int row, int col, int tile) {
     boardHash ^= hashTable[row][col][tile];
 }
 
+void ZobristHash::updateHash(uint64_t val) {
+    boardHash = val;
+}
+
 uint64_t ZobristHash::hash() {
     return boardHash;
 }

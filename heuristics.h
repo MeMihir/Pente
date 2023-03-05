@@ -26,4 +26,5 @@ public:
     vector<int> hashWindow5(int i, int j);
     int checkOpen4s(int i, int j, int tile);
     int slidingWindowHeuristicFull();
+    int slidingWindowHeuristicPartial(int i, int j, vector<pair<int, int> >range);
 };
