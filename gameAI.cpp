@@ -193,6 +193,8 @@ bool checkWin(vector<vector<int> > currBoard, int wCaps, int bCaps, int color, i
 // Get Child Board positions
 pair<vector<pii>, vector<pii> > getChildren(vector<vector<int> > currBoard)
 {
+	// int R = 4;
+	int R = 2;
     vector<pii> children;
     vector<pii> range(19, pair<int, int>(19, -1)); // [start, end] inclusive
 
@@ -202,13 +204,13 @@ pair<vector<pii>, vector<pii> > getChildren(vector<vector<int> > currBoard)
         {
             if (currBoard[i][j] != 0)
             {
-                int startR = max(0, i - 4);
-                int endR = min(18, i + 4);
+                int startR = max(0, i - R);
+                int endR = min(18, i + R);
 
                 for (int k = startR; k <= endR; k++)
                 {
-                    range[k].first = max(0, min(range[k].first, j - 4));
-                    range[k].second = min(18, max(range[k].second, j + 4));
+                    range[k].first = max(0, min(range[k].first, j - R));
+                    range[k].second = min(18, max(range[k].second, j + R));
                 }
             }
         }
