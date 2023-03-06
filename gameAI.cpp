@@ -8,12 +8,15 @@
 #include <queue>
 
 using namespace std;
+#include "globals.h"
 #include "heuristics.h"
 #include "hashing.h"
 #include "gameAI.h"
 #include "helpers.h"
 
 #define pii pair<int, int>
+
+int missCount = 0;
 
 // Evaluate Board
 int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing, int agentTile, int whiteCaptures=0, int blackCapture=0)
@@ -251,9 +254,15 @@ priority_queue <pair<int, pii> > moveOrderingMax(vector<pii> children, vector<ve
 		tie(numCaptures, newHash) = temp;
 
 		agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
-		zobrist.updateHash(newHash); // update hash
+		// zobrist.updateHash(newHash); // update hash
 
-		heuristic = evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps); // Heuristic
+		if(transpositionTable[newHash] == 0) {
+			heuristic = evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps); // Heuristic
+			transpositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
+			// missCount++; // DEBUG
+		}
+		else
+			heuristic = transpositionTable[newHash];
 		// cout<<children[i].first<<" "<<children[i].second<<" "<<heuristic<<endl; // DEBUG
 		
 		moveOrderMax.push(make_pair(heuristic, children[i]));
@@ -261,6 +270,7 @@ priority_queue <pair<int, pii> > moveOrderingMax(vector<pii> children, vector<ve
 		agentTile == 1 ? bCaps -= numCaptures : wCaps -= numCaptures;
 		zobrist.updateHash(oldHash); // update hash
 	}
+	// cout<<missCount<<"\t"<<(double)missCount/(double)children.size()<<endl; // DEBUG
 	return moveOrderMax;
 }
 
@@ -270,12 +280,12 @@ priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderingM
  
 	for (size_t i = 0; i < children.size(); i++)
 	{
-		board[children[i].first][children[i].second] = agentTile;
 		vector<vector<int> > currBoard = board;
 		int numCaptures;
 		int heuristic;
 		
 		uint64_t oldHash = zobrist.hash(); // get old hash
+		currBoard[children[i].first][children[i].second] = agentTile;
 		zobrist.updateHash(children[i].first, children[i].second, agentTile); // update hash
 		uint64_t newHash;
 		pair<int, uint64_t> temp;
@@ -284,14 +294,18 @@ priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderingM
 		tie(numCaptures, newHash) = temp;
 
 		agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
-		zobrist.updateHash(newHash); // update hash
+		// zobrist.updateHash(newHash); // update hash
 
-		heuristic = evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps); // Heuristic
+		if(transpositionTable[newHash] == 0) {
+			heuristic = evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps); // Heuristic
+			transpositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
+		}
+		else
+			heuristic = transpositionTable[newHash];
 		// cout<<children[i].first<<" "<<children[i].second<<" "<<heuristic<<endl; // DEBUG
 		
 		moveOrderMin.push(make_pair(heuristic, children[i]));
 
-		currBoard[children[i].first][children[i].second] = 0;
 		agentTile == 1 ? bCaps -= numCaptures : wCaps -= numCaptures;
 		zobrist.updateHash(oldHash); // update hash
 	}

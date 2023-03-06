@@ -7,14 +7,18 @@
 #include <string>
 #include <tuple>
 #include <queue>
+#include <unordered_map>
 
 using namespace std;
+#include "globals.h"
 #include "hashing.h"
 #include "heuristics.h"
 #include "helpers.h"
 #include "gameAI.h"
 
 #define pii pair<int, int>
+
+unordered_map <uint64_t, int > transpositionTable;
 
 class agent
 {
@@ -63,13 +67,43 @@ agent::agent(string path)
                 board[i][j] = 1;
         }
     }
+    fclose(stdin);
 
     maxDepth = 2;
+
+
+    // read playdata.txt
+    freopen("./playdata.txt", "r", stdin);
+    if (cin.fail()) // file not found
+    {
+        freopen("./playdata.txt", "w", stdout);
+        cout << "0" << endl;
+        fclose(stdout);
+        freopen("./playdata.txt", "r", stdin);
+    }
+
+    int nHeuristics;
+    cin >> nHeuristics;
+    for (int i = 0; i < nHeuristics; i++)
+    {
+        uint64_t hash;
+        int heuristic;
+        cin>>hash>>heuristic;
+        transpositionTable[hash] = heuristic;
+    }
+    fclose(stdin);
+
+    cout<<nHeuristics<<transpositionTable.size()<<endl;
 }
 
 agent::~agent()
 {
-    fclose(stdin);
+    freopen("./playdata.txt", "w", stdout);
+    cout<<transpositionTable.size();
+    for(auto it:transpositionTable){
+        cout<<endl<<it.first<<" "<<it.second;
+    }
+    fclose(stdout);
 }
 
 // ============================================================================================================================================
@@ -81,6 +115,7 @@ void agent::printData()
     cout << "Time\t\t: " << time << endl;
     cout << "White Captures\t: " << whiteCaptures << endl;
     cout << "Black Captures\t: " << blackCaptures << endl;
+    cout << "Max Depth\t: " << maxDepth << endl;
     cout << "Board: " << endl;
     printBoard(board);
 }
@@ -152,7 +187,7 @@ void agent::playGame()
         board[child.first][child.second] = 0;
         agentTile == 1 ? blackCaptures -= numCaps : whiteCaptures -= numCaps;
         zobristHash.updateHash(oldHash); // update hash for undoing move
-        cout<<zobristHash.hash()<<endl; // DEBUG
+        // cout<<zobristHash.hash()<<endl; // DEBUG
 
         if (value > bestValue)
         {
