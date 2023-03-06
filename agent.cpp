@@ -18,7 +18,7 @@ using namespace std;
 
 #define pii pair<int, int>
 
-unordered_map <uint64_t, int > transpositionTable;
+unordered_map <uint64_t, long long int > transpositionTable;
 
 class agent
 {
@@ -32,13 +32,15 @@ private:
 
     // Hyperparameters
     int maxDepth;
+    int FwdPrunePercent;
+    int MinHeuristic;
 
 public:
     agent(string path);
     ~agent();
     void printData();
     void playGame();
-    int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing);
+    long long int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing);
 };
 
 // CONSTRUCTOR
@@ -70,7 +72,8 @@ agent::agent(string path)
     fclose(stdin);
 
     maxDepth = 2;
-
+    FwdPrunePercent = 5;
+    MinHeuristic = 100;
 
     // read playdata.txt
     freopen("./playdata.txt", "r", stdin);
@@ -87,7 +90,7 @@ agent::agent(string path)
     for (int i = 0; i < nHeuristics; i++)
     {
         uint64_t hash;
-        int heuristic;
+        long long int heuristic;
         cin>>hash>>heuristic;
         transpositionTable[hash] = heuristic;
     }
@@ -123,19 +126,19 @@ void agent::printData()
 // ============================================================================================================================================
 // TODO:GAMEPLAY FUNCTIONS
 // Eval Functions
-int agent::evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing)
+long long int agent::evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing)
 {
-    int heuristic = centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
-    return isMaximizing ? heuristic : -heuristic;
+    // int heuristic = centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
+    // return isMaximizing ? heuristic : -heuristic;
     // return randomHeuristic();
-    // slidingHeuristic heuristic(currBoard, agentTile, whiteCaptures, blackCaptures);
-	// return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
+    slidingHeuristic heuristic(currBoard, agentTile, whiteCaptures, blackCaptures);
+	return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
 }
 
 // PLAY GAME
 void agent::playGame()
 {
-    int bestValue = -1000;
+    long long int bestValue = ninfi;
     int bestRow = -1;
     int bestCol = -1;
 
@@ -182,7 +185,7 @@ void agent::playGame()
         zobristHash.updateHash(hash); // update hash for captures
         // cout<<zobristHash.hash()<<" "; // DEBUG
         
-        int value = alphaBeta(currBoard, whiteCaptures, blackCaptures, maxDepth, -1000, 1000, false, agentTile, zobristHash);
+        long long int value = alphaBeta(currBoard, whiteCaptures, blackCaptures, maxDepth, -1000, 1000, false, agentTile, zobristHash);
         
         board[child.first][child.second] = 0;
         agentTile == 1 ? blackCaptures -= numCaps : whiteCaptures -= numCaps;

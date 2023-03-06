@@ -19,12 +19,12 @@ using namespace std;
 int missCount = 0;
 
 // Evaluate Board
-int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing, int agentTile, int whiteCaptures=0, int blackCapture=0)
+long long int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing, int agentTile, int whiteCaptures=0, int blackCapture=0)
 {
-    int heuristic = centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
-    return isMaximizing ? heuristic : -heuristic;
-	// slidingHeuristic heuristic(currBoard, agentTile, whiteCaptures, blackCapture);
-	// return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
+    // int heuristic = centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
+    // return isMaximizing ? heuristic : -heuristic;
+	slidingHeuristic heuristic(currBoard, agentTile, whiteCaptures, blackCapture);
+	return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
 }
 
 // Capture Functions
@@ -244,7 +244,7 @@ priority_queue <pair<int, pii> > moveOrderingMax(vector<pii> children, vector<ve
 	{
 		vector<vector<int> > currBoard = board;
 		int numCaptures;
-		int heuristic;
+		long long int heuristic;
 		
 		uint64_t oldHash = zobrist.hash(); // get old hash
 		currBoard[children[i].first][children[i].second] = agentTile;
@@ -284,7 +284,7 @@ priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderingM
 	{
 		vector<vector<int> > currBoard = board;
 		int numCaptures;
-		int heuristic;
+		long long int heuristic;
 		
 		uint64_t oldHash = zobrist.hash(); // get old hash
 		currBoard[children[i].first][children[i].second] = agentTile;
@@ -315,7 +315,7 @@ priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderingM
 }
 
 // ALPHA BETA
-int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, int alpha, int beta, bool isMaximizing, int agentTile, ZobristHash hasher)
+long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher)
 {
     if (depth == 0)
         return evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps);
@@ -324,10 +324,12 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
 	vector<pii> children;
 	vector<pii> range;
 	tie(children, range) = getChildren(currBoard);
+	int numChildren = children.size();
+	int fwdPruningChildren = numChildren*0.1;
 
     if (isMaximizing)
     {
-        int bestValue = -1000;
+        long long int bestValue = ninfi;
 		// cout << children.size() << endl; // DEBUG
 
 		// ?MOVE ORDERING
@@ -335,6 +337,9 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
 
         while(!moveOrderMax.empty())
         {
+			if(moveOrderMax.size() < fwdPruningChildren)
+				break;
+
 			int heuristic = moveOrderMax.top().first;
 			pii child = moveOrderMax.top().second;
 			moveOrderMax.pop();
@@ -353,11 +358,11 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
 
             agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
             if(checkWin(newBoard, wCaps, bCaps, agentTile, child.first, child.second))
-                return 1000;
+                return infi;
             // printBoard(board); // DEBUG
 
 			hasher.updateHash(hash); // update hash for captures
-            int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, false, agentTile, hasher);
+            long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, false, agentTile, hasher);
 
 
             currBoard[child.first][child.second] = 0;
@@ -374,7 +379,7 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
     }
     else
     {
-        int bestValue = 1000;
+        long long int bestValue = infi;
         // cout << children.size() << endl; // DEBUG
 
 		// ?MOVE ORDERING
@@ -382,6 +387,8 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
 
         while(!moveOrderMin.empty())
         {
+			if(moveOrderMin.size() < fwdPruningChildren)
+				break;
 			int heuristic = moveOrderMin.top().first;
 			pii child = moveOrderMin.top().second;
 			moveOrderMin.pop();
@@ -405,7 +412,7 @@ int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, i
             // printBoard(board); // DEBUG
 			
 			hasher.updateHash(hash); // update hash for captures
-            int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, true, agentTile, hasher);
+            long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, true, agentTile, hasher);
 
             currBoard[child.first][child.second] = 0;
 			agentTile == 1 ? wCaps -= numCaptures : bCaps -= numCaptures; // undo captures
