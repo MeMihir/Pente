@@ -230,15 +230,15 @@ pair<vector<pii>, vector<pii> > getChildren(vector<vector<int> > currBoard)
     return make_pair(children, range);
 }
 
-bool Compare::operator()(pair<int, pii> a, pair<int, pii> b)
+bool Compare::operator()(pair<long long int, pii> a, pair<long long int, pii> b)
 {
 	return a.first > b.first;
 }
 
 // MOVE ORDERING
-priority_queue <pair<int, pii> > moveOrderingMax(vector<pii> children, vector<vector<int> > board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist, vector<pii>range)
+priority_queue <pair<long long int, pii> > moveOrderingMax(vector<pii> children, vector<vector<int> > board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist, vector<pii>range)
 {
-	priority_queue <pair<int, pii> > moveOrderMax;
+	priority_queue <pair<long long int, pii> > moveOrderMax;
 
 	for (size_t i = 0; i < children.size(); i++)
 	{
@@ -277,9 +277,9 @@ priority_queue <pair<int, pii> > moveOrderingMax(vector<pii> children, vector<ve
 	return moveOrderMax;
 }
 
-priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderingMin(vector<pii> children, vector<vector<int> > board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
+priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderingMin(vector<pii> children, vector<vector<int> > board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
 {
-	priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderMin;
+	priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderMin;
  
 	for (size_t i = 0; i < children.size(); i++)
 	{
@@ -337,11 +337,11 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 		// cout << children.size() << endl; // DEBUG
 
 		// ?MOVE ORDERING
-		priority_queue <pair<int, pii> > moveOrderMax = moveOrderingMax(children, currBoard, agentTile, isMaximizing, wCaps, bCaps, hasher, range);
+		priority_queue <pair<long long int, pii> > moveOrderMax = moveOrderingMax(children, currBoard, agentTile, isMaximizing, wCaps, bCaps, hasher, range);
 
         while(!moveOrderMax.empty())
         {
-			int heuristic = moveOrderMax.top().first;
+			long long int heuristic = moveOrderMax.top().first;
 			pii child = moveOrderMax.top().second;
 			moveOrderMax.pop();
 
@@ -390,11 +390,11 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
         // cout << children.size() << endl; // DEBUG
 
 		// ?MOVE ORDERING
-		priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderMin = moveOrderingMin(children, currBoard, agentTile, isMaximizing, wCaps, bCaps, hasher);
+		priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderMin = moveOrderingMin(children, currBoard, agentTile, isMaximizing, wCaps, bCaps, hasher);
 
         while(!moveOrderMin.empty())
         {
-			int heuristic = moveOrderMin.top().first;
+			long long int heuristic = moveOrderMin.top().first;
 			pii child = moveOrderMin.top().second;
 			moveOrderMin.pop();
 

@@ -183,7 +183,7 @@ void agent::playGame()
 
     vector<pii> children;
     vector<pii> range;
-    priority_queue<pair<int, pii> > moveOrder;
+    priority_queue<pair<long long int, pii> > moveOrder;
 	tie(children, range) = getChildren(board);
     // cout << children.size() << endl; // DEBUG
 
@@ -191,7 +191,7 @@ void agent::playGame()
 
     while(!moveOrder.empty())
     {
-        int heuristic = moveOrder.top().first;
+        long long int heuristic = moveOrder.top().first;
         pii child = moveOrder.top().second;
         moveOrder.pop();
         cout << heuristic << " " << child.first << " " << child.second << endl; // DEBUG

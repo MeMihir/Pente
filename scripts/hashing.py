@@ -399,6 +399,6 @@ def position_to_indices(position):
 
 
 if __name__ == "__main__":
-    # arr = list(map(int, input().split()))
-    # print(ternary_array_hash(arr))
-    print()
+    arr = list(map(int, input().split()))
+    print(ternary_array_hash(arr))
+    # print()

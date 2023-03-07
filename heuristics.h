@@ -12,7 +12,8 @@ private:
     int blackCaptures;
     int P;
 
-    int heusristicOpen4s;
+    long long int heusristicOpen4s;
+    long long int heuristic3toWin;
     unordered_map<int, long long int> heuristicWindow4W;
     unordered_map<int, long long int> heuristicWindow5W;
     unordered_map<int, long long int> heuristicWindow4B;
@@ -26,5 +27,6 @@ public:
     vector<long long int> hashWindow5(int i, int j);
     long long int checkOpen4s(int i, int j, int tile);
     long long int slidingWindowHeuristicFull();
+    pair<int, int> toWin3(int i, int j);
     int slidingWindowHeuristicPartial(vector<pair<int, int> >range);
 };
