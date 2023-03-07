@@ -280,6 +280,7 @@ priority_queue <pair<long long int, pii> > moveOrderingMax(vector<pii> children,
 priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderingMin(vector<pii> children, vector<vector<int> > board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
 {
 	priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderMin;
+	int opponentTile = agentTile == 1 ? 2 : 1;
  
 	for (size_t i = 0; i < children.size(); i++)
 	{
@@ -288,15 +289,15 @@ priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Com
 		long long int heuristic;
 		
 		uint64_t oldHash = zobrist.hash(); // get old hash
-		currBoard[children[i].first][children[i].second] = agentTile;
-		zobrist.updateHash(children[i].first, children[i].second, agentTile); // update hash
+		currBoard[children[i].first][children[i].second] = opponentTile;
+		zobrist.updateHash(children[i].first, children[i].second, opponentTile); // update hash
 		uint64_t newHash;
 		pair<int, uint64_t> temp;
 
-		tie(currBoard, temp) = checkCaptures(board, children[i].first, children[i].second, agentTile, zobrist);
+		tie(currBoard, temp) = checkCaptures(board, children[i].first, children[i].second, opponentTile, zobrist);
 		tie(numCaptures, newHash) = temp;
 
-		agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
+		opponentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
 		// zobrist.updateHash(newHash); // update hash
 
 		if(transpositionTable[newHash] == 0) {
@@ -310,14 +311,14 @@ priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Com
 		
 		moveOrderMin.push(make_pair(heuristic, children[i]));
 
-		agentTile == 1 ? bCaps -= numCaptures : wCaps -= numCaptures;
+		opponentTile == 1 ? bCaps -= numCaptures : wCaps -= numCaptures;
 		zobrist.updateHash(oldHash); // update hash
 	}
 	return moveOrderMin;
 }
 
 // ALPHA BETA
-long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher, float ForwardPruningPercentage, int MinHeuristic)
+long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher, float ForwardPruningPercentage, long long int MinHeuristic)
 {
     if (depth == 0) {
 		if(transpositionTable[hasher.hash()] == 0)
@@ -338,6 +339,8 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 
 		// ?MOVE ORDERING
 		priority_queue <pair<long long int, pii> > moveOrderMax = moveOrderingMax(children, currBoard, agentTile, isMaximizing, wCaps, bCaps, hasher, range);
+		
+		long long int maxHeuristic = moveOrderMax.top().first;
 
         while(!moveOrderMax.empty())
         {
@@ -348,7 +351,7 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 			// ?FWD PRUNING
 			if(moveOrderMax.size() < fwdPruningChildren*(1+ (2-depth)*0.5))
 				break;
-			if(heuristic < MinHeuristic)
+			if(heuristic < maxHeuristic/MinHeuristic)
 				break;
 
             currBoard[child.first][child.second] = agentTile;
@@ -365,7 +368,7 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 
             agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
             if(checkWin(newBoard, wCaps, bCaps, agentTile, child.first, child.second))
-                return infi;
+                return INT_MAX;
             // printBoard(board); // DEBUG
 
 			hasher.updateHash(hash); // update hash for captures
@@ -388,10 +391,10 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
     {
         long long int bestValue = infi;
         // cout << children.size() << endl; // DEBUG
-
+		int opponentTile = agentTile == 1 ? 2 : 1;
 		// ?MOVE ORDERING
 		priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderMin = moveOrderingMin(children, currBoard, agentTile, isMaximizing, wCaps, bCaps, hasher);
-
+		long long int minHeuristic = moveOrderMin.top().first;
         while(!moveOrderMin.empty())
         {
 			long long int heuristic = moveOrderMin.top().first;
@@ -401,32 +404,31 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 			// ?FWD PRUNING
 			if(moveOrderMin.size() < fwdPruningChildren*(1+ (2-depth)*0.5))
 				break;
-			if(heuristic > -1*MinHeuristic)
+			if(heuristic > (minHeuristic>0 ? minHeuristic/MinHeuristic : -1*minHeuristic/MinHeuristic))
 				break;
 
-            currBoard[child.first][child.second] = agentTile;
 			vector<vector<int> > newBoard = currBoard;
+            newBoard[child.first][child.second] = opponentTile;
 			int numCaptures;
 			
 			uint64_t oldHash = hasher.hash(); // get old hash
-        	hasher.updateHash(child.first, child.second, agentTile); // update hash for move
+        	hasher.updateHash(child.first, child.second, opponentTile); // update hash for move
 			uint64_t hash;
 			pair<int, uint64_t> temp;
 
-            tie(newBoard, temp) = checkCaptures(currBoard, child.first, child.second, agentTile == 1 ? 2 : 1, hasher);
+            tie(newBoard, temp) = checkCaptures(currBoard, child.first, child.second, opponentTile, hasher);
 			tie(numCaptures, hash) = temp;
 
 			// ?CHECK IF NEXT LINE IS CORRECT
-            agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
+            opponentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
             if(checkWin(newBoard, wCaps, bCaps, agentTile == 1 ? 2 : 1, child.first, child.second))
-                return -1000;
+                return INT_MIN;
             // printBoard(board); // DEBUG
 			
 			hasher.updateHash(hash); // update hash for captures
             long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, true, agentTile, hasher, ForwardPruningPercentage, MinHeuristic);
 
-            currBoard[child.first][child.second] = 0;
-			agentTile == 1 ? wCaps -= numCaptures : bCaps -= numCaptures; // undo captures
+			opponentTile == 1 ? bCaps -= numCaptures : wCaps -= numCaptures; // undo captures
 			hasher.updateHash(oldHash); // update hash for undoing move
 
             bestValue = max(bestValue, value);

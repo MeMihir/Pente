@@ -36,7 +36,7 @@ private:
     // Hyperparameters
     int maxDepth;
     float FwdPrunePercent;
-    int MinHeuristic;
+    long long int MinHeuristic;
 
 public:
     agent(string path);
@@ -75,7 +75,7 @@ agent::agent(string path)
     fclose(stdin);
 
     maxDepth = 2;
-    FwdPrunePercent = 0.1;
+    FwdPrunePercent = 0.2;
     MinHeuristic = 1000;
 
     // read playdata.txt
@@ -188,6 +188,9 @@ void agent::playGame()
     // cout << children.size() << endl; // DEBUG
 
     moveOrder = moveOrderingMax(children, board, agentTile, true, whiteCaptures, blackCaptures, zobristHash, range);
+    int numChildren = children.size();
+	int fwdPruningChildren = numChildren*FwdPrunePercent;
+    long long int maxHeuristic = moveOrder.top().first;
 
     while(!moveOrder.empty())
     {
@@ -195,6 +198,11 @@ void agent::playGame()
         pii child = moveOrder.top().second;
         moveOrder.pop();
         cout << heuristic << " " << child.first << " " << child.second << endl; // DEBUG
+
+        if(moveOrder.size() < fwdPruningChildren)
+			break;
+        if(heuristic < maxHeuristic/MinHeuristic)
+            break;
 
         board[child.first][child.second] = agentTile;
         vector<vector<int> > currBoard = board;

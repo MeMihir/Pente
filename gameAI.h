@@ -12,4 +12,4 @@ bool checkWin(vector<vector<int> > currBoard, int wCaps, int bCaps, int color, i
 pair<vector<pii>, vector<pii> > getChildren(vector<vector<int> > currBoard);
 priority_queue <pair<long long int, pii> > moveOrderingMax(vector<pii> children, vector<vector<int> > board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist, vector<pii> range);
 priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderingMin(vector<pii> children, vector<vector<int> > board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist, vector<pii> range);
-long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher, float ForwardPruningPercentage, int MinHeuristic);
+long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher, float ForwardPruningPercentage, long long int MinHeuristic);
