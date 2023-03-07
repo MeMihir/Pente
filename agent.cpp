@@ -20,6 +20,7 @@ using namespace std;
 #define pii pair<int, int>
 
 unordered_map <uint64_t, long long int > transpositionTable;
+// unordered_map <uint64_t, pair<long long int, pair <int, int> > > transpositionTable2;
 
 class agent
 {
@@ -34,7 +35,7 @@ private:
 
     // Hyperparameters
     int maxDepth;
-    int FwdPrunePercent;
+    float FwdPrunePercent;
     int MinHeuristic;
 
 public:
@@ -74,8 +75,8 @@ agent::agent(string path)
     fclose(stdin);
 
     maxDepth = 2;
-    FwdPrunePercent = 5;
-    MinHeuristic = 100;
+    FwdPrunePercent = 0.1;
+    MinHeuristic = 1000;
 
     // read playdata.txt
     freopen("./playdata.txt", "r", stdin);
@@ -98,8 +99,26 @@ agent::agent(string path)
         transpositionTable[hash] = heuristic;
     }
     fclose(stdin);
+ 
+    // cout<<nHeuristics<<transpositionTable.size()<<endl;
 
-    cout<<nHeuristics<<transpositionTable.size()<<endl;
+    // freopen("./playdata2.txt", "r", stdin);
+    // if (cin.fail()) // file not found
+    // {
+    //     freopen("./playdata2.txt", "w", stdout);
+    //     cout << "" << endl;
+    //     fclose(stdout);
+    //     freopen("./playdata2.txt", "r", stdin);
+    // }
+    // for (int i = 0; i < nHeuristics; i++)
+    // {
+    //     uint64_t hash;
+    //     long long int heuristic;
+    //     int x, y;
+    //     cin>>hash>>heuristic>>x>>y;
+    //     transpositionTable2[hash] = make_pair(heuristic, make_pair(x,y));
+    // }
+    // fclose(stdin);
 }
 
 agent::~agent()
@@ -111,6 +130,11 @@ agent::~agent()
         cout<<endl<<it.first<<" "<<it.second;
     }
     fclose(stdout);
+    // freopen("./playdata2.txt", "w", stdout);
+    // for(auto it:transpositionTable2){
+    //     cout<<endl<<it.first<<" "<<it.second.first<<" "<<it.second.second.first<<" "<<it.second.second.second;
+    // }
+    // fclose(stdout);
 }
 
 // ============================================================================================================================================
@@ -163,14 +187,14 @@ void agent::playGame()
 	tie(children, range) = getChildren(board);
     // cout << children.size() << endl; // DEBUG
 
-    moveOrder = moveOrderingMax(children, board, agentTile, maxDepth, -1000, 1000, true, whiteCaptures, blackCaptures, zobristHash);
+    moveOrder = moveOrderingMax(children, board, agentTile, true, whiteCaptures, blackCaptures, zobristHash, range);
 
     while(!moveOrder.empty())
     {
         int heuristic = moveOrder.top().first;
         pii child = moveOrder.top().second;
         moveOrder.pop();
-        // cout << heuristic << " " << child.first << " " << child.second << endl; // DEBUG
+        cout << heuristic << " " << child.first << " " << child.second << endl; // DEBUG
 
         board[child.first][child.second] = agentTile;
         vector<vector<int> > currBoard = board;
@@ -195,7 +219,7 @@ void agent::playGame()
         zobristHash.updateHash(hash); // update hash for captures
         // cout<<zobristHash.hash()<<" "; // DEBUG
         
-        long long int value = alphaBeta(currBoard, whiteCaptures, blackCaptures, maxDepth, -1000, 1000, false, agentTile, zobristHash);
+        long long int value = alphaBeta(currBoard, whiteCaptures, blackCaptures, maxDepth, INT_MIN, INT_MAX, false, agentTile, zobristHash, FwdPrunePercent, MinHeuristic);
         
         board[child.first][child.second] = 0;
         agentTile == 1 ? blackCaptures -= numCaps : whiteCaptures -= numCaps;

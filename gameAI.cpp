@@ -236,7 +236,7 @@ bool Compare::operator()(pair<int, pii> a, pair<int, pii> b)
 }
 
 // MOVE ORDERING
-priority_queue <pair<int, pii> > moveOrderingMax(vector<pii> children, vector<vector<int> > board, int agentTile, int depth, int alpha, int beta, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
+priority_queue <pair<int, pii> > moveOrderingMax(vector<pii> children, vector<vector<int> > board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist, vector<pii>range)
 {
 	priority_queue <pair<int, pii> > moveOrderMax;
 
@@ -261,6 +261,7 @@ priority_queue <pair<int, pii> > moveOrderingMax(vector<pii> children, vector<ve
 		if(transpositionTable[newHash] == 0) {
 			heuristic = evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps); // Heuristic
 			transpositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
+			// transpositionTable2[newHash] = make_pair(heuristic == 0 ? 1 : heuristic, children[i]);
 			// missCount++; // DEBUG
 		}
 		else
@@ -276,7 +277,7 @@ priority_queue <pair<int, pii> > moveOrderingMax(vector<pii> children, vector<ve
 	return moveOrderMax;
 }
 
-priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderingMin(vector<pii> children, vector<vector<int> > board, int agentTile, int depth, int alpha, int beta, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
+priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderingMin(vector<pii> children, vector<vector<int> > board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
 {
 	priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderMin;
  
@@ -301,6 +302,7 @@ priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderingM
 		if(transpositionTable[newHash] == 0) {
 			heuristic = evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps); // Heuristic
 			transpositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
+			// transpositionTable2[newHash] = make_pair(heuristic == 0 ? 1 : heuristic, children[i]);
 		}
 		else
 			heuristic = transpositionTable[newHash];
@@ -315,17 +317,19 @@ priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderingM
 }
 
 // ALPHA BETA
-long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher)
+long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher, float ForwardPruningPercentage, int MinHeuristic)
 {
-    if (depth == 0)
-        return evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps);
-
+    if (depth == 0) {
+		if(transpositionTable[hasher.hash()] == 0)
+	    	return evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps);
+		return transpositionTable[hasher.hash()];
+	}
 	
 	vector<pii> children;
 	vector<pii> range;
 	tie(children, range) = getChildren(currBoard);
 	int numChildren = children.size();
-	int fwdPruningChildren = numChildren*0.1;
+	int fwdPruningChildren = numChildren*ForwardPruningPercentage;
 
     if (isMaximizing)
     {
@@ -333,16 +337,19 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 		// cout << children.size() << endl; // DEBUG
 
 		// ?MOVE ORDERING
-		priority_queue <pair<int, pii> > moveOrderMax = moveOrderingMax(children, currBoard, agentTile, depth, alpha, beta, isMaximizing, wCaps, bCaps, hasher);
+		priority_queue <pair<int, pii> > moveOrderMax = moveOrderingMax(children, currBoard, agentTile, isMaximizing, wCaps, bCaps, hasher, range);
 
         while(!moveOrderMax.empty())
         {
-			if(moveOrderMax.size() < fwdPruningChildren)
-				break;
-
 			int heuristic = moveOrderMax.top().first;
 			pii child = moveOrderMax.top().second;
 			moveOrderMax.pop();
+
+			// ?FWD PRUNING
+			if(moveOrderMax.size() < fwdPruningChildren*(1+ (2-depth)*0.5))
+				break;
+			if(heuristic < MinHeuristic)
+				break;
 
             currBoard[child.first][child.second] = agentTile;
 			vector<vector<int> > newBoard = currBoard;
@@ -362,7 +369,7 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
             // printBoard(board); // DEBUG
 
 			hasher.updateHash(hash); // update hash for captures
-            long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, false, agentTile, hasher);
+            long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, false, agentTile, hasher, ForwardPruningPercentage, MinHeuristic);
 
 
             currBoard[child.first][child.second] = 0;
@@ -383,15 +390,19 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
         // cout << children.size() << endl; // DEBUG
 
 		// ?MOVE ORDERING
-		priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderMin = moveOrderingMin(children, currBoard, agentTile, depth, alpha, beta, isMaximizing, wCaps, bCaps, hasher);
+		priority_queue <pair<int, pii>, vector<pair<int, pii> >, Compare > moveOrderMin = moveOrderingMin(children, currBoard, agentTile, isMaximizing, wCaps, bCaps, hasher);
 
         while(!moveOrderMin.empty())
         {
-			if(moveOrderMin.size() < fwdPruningChildren)
-				break;
 			int heuristic = moveOrderMin.top().first;
 			pii child = moveOrderMin.top().second;
 			moveOrderMin.pop();
+
+			// ?FWD PRUNING
+			if(moveOrderMin.size() < fwdPruningChildren*(1+ (2-depth)*0.5))
+				break;
+			if(heuristic > -1*MinHeuristic)
+				break;
 
             currBoard[child.first][child.second] = agentTile;
 			vector<vector<int> > newBoard = currBoard;
@@ -406,13 +417,13 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 			tie(numCaptures, hash) = temp;
 
 			// ?CHECK IF NEXT LINE IS CORRECT
-            agentTile == 1 ? wCaps += numCaptures : bCaps += numCaptures;
+            agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
             if(checkWin(newBoard, wCaps, bCaps, agentTile == 1 ? 2 : 1, child.first, child.second))
                 return -1000;
             // printBoard(board); // DEBUG
 			
 			hasher.updateHash(hash); // update hash for captures
-            long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, true, agentTile, hasher);
+            long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, true, agentTile, hasher, ForwardPruningPercentage, MinHeuristic);
 
             currBoard[child.first][child.second] = 0;
 			agentTile == 1 ? wCaps -= numCaptures : bCaps -= numCaptures; // undo captures

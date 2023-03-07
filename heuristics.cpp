@@ -67,8 +67,8 @@ void slidingHeuristic::initializeHeuristicMaps()
     heuristicWindow4W[288] = 30; // w _ w w
     heuristicWindow4W[315] = 50; // Dynamic // w b b _
     heuristicWindow4W[73] = 50; // Dynamic // _ b b w
-    // heuristicWindow4W[198] = 100000; // b b b w
-    // heuristicWindow4W[319] = 100000; // w b b b
+    heuristicWindow4W[198] = 100000; // b b b w
+    heuristicWindow4W[319] = 100000; // w b b b
 
     // MAXIMIZE BLACK
     heuristicWindow5B[975] = infi; // b b b b b
@@ -86,8 +86,8 @@ void slidingHeuristic::initializeHeuristicMaps()
     heuristicWindow4B[144] = 30; // b _ b b
     heuristicWindow4B[255] = 50; // Dynamic // b w w _
     heuristicWindow4B[134] = 50; // Dynamic // _ w w b
-    // heuristicWindow4B[384] = 100000; // w w w b
-    // heuristicWindow4B[263] = 100000; // b w w w
+    heuristicWindow4B[384] = 100000; // w w w b
+    heuristicWindow4B[263] = 100000; // b w w w
 }
 
 vector<long long int> slidingHeuristic::hashWindow4(int i, int j)
@@ -232,14 +232,15 @@ long long int slidingHeuristic::slidingWindowHeuristicFull()
         }
     }
     if(tile == 1)
-        return heuristic - whiteCaptures*1000000 + blackCaptures*1000000;
+        return heuristic - whiteCaptures*10000000 + blackCaptures*10000000;
     else
-        return heuristic - blackCaptures*1000000 + whiteCaptures*1000000;
+        return heuristic - blackCaptures*10000000 + whiteCaptures*10000000;
 }
 
-int slidingHeuristic::slidingWindowHeuristicPartial(int i, int j, vector<pii>range)
-{
-    int heuristic = 0;
+int slidingHeuristic::slidingWindowHeuristicPartial(vector<pii>range)
+{   
+    long long int heuristic = 0;
+    if(range.size() == 0) return slidingWindowHeuristicFull();
     for (int i = 0; i < 19; i++)
     {
         for (int j = range[i].first ; j < range[i].second; j++)
@@ -262,7 +263,7 @@ int slidingHeuristic::slidingWindowHeuristicPartial(int i, int j, vector<pii>ran
         }
     }
     if(tile == 1)
-        return heuristic - whiteCaptures*1000 + blackCaptures*1000;
+        return heuristic - whiteCaptures*1000000 + blackCaptures*1000000;
     else
-        return heuristic - blackCaptures*1000 + whiteCaptures*1000;
+        return heuristic - blackCaptures*1000000 + whiteCaptures*1000000;
 }
