@@ -13,5 +13,6 @@ public:
     uint64_t rand_uint64();
     void updateHash(int row, int col, int tile);
     void updateHash(uint64_t val);
+    void printTable();
     uint64_t hash();
 };

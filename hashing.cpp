@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>
 #include <unordered_map>
 #include <random>
@@ -52,4 +53,23 @@ void ZobristHash::updateHash(uint64_t val) {
 
 uint64_t ZobristHash::hash() {
     return boardHash;
+}
+
+void ZobristHash::printTable() {
+    cout<<"[";
+    for (size_t i = 0; i < 19; i++)
+    {
+        cout<<"[";
+        for (size_t j = 0; j < 19; j++)
+        {
+            cout<<"[";
+            for (size_t k = 0; k < 3; k++)
+            {
+                cout << hashTable[i][j][k] << ",";
+            }
+            cout << "]" << endl;
+        }
+        cout << "]" << endl;
+    }
+    cout<<"],"<<endl;
 }

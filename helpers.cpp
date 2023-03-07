@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -34,4 +35,12 @@ void printVector(vector<int> moves)
         cout << moves[i] << " ";
     }
     cout << endl;
+}
+
+
+string indices_to_position(int row, int column) {
+    if(column >= 8) column++;
+    char letter = static_cast<char>(column + 'A');
+    string number = to_string(19 - row);
+    return string(1, letter) + number;
 }

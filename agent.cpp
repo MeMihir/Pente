@@ -15,6 +15,7 @@ using namespace std;
 #include "heuristics.h"
 #include "helpers.h"
 #include "gameAI.h"
+#include "openingMoves.h"
 
 #define pii pair<int, int>
 
@@ -29,6 +30,7 @@ private:
     int blackCaptures;
     double time;
     int agentTile; // 1 = black, 2 = white
+    int nTurns;
 
     // Hyperparameters
     int maxDepth;
@@ -80,12 +82,13 @@ agent::agent(string path)
     if (cin.fail()) // file not found
     {
         freopen("./playdata.txt", "w", stdout);
-        cout << "0" << endl;
+        cout << "1" << endl << "0" << endl;
         fclose(stdout);
         freopen("./playdata.txt", "r", stdin);
     }
 
     int nHeuristics;
+    cin >> nTurns;
     cin >> nHeuristics;
     for (int i = 0; i < nHeuristics; i++)
     {
@@ -100,8 +103,9 @@ agent::agent(string path)
 }
 
 agent::~agent()
-{
+{   
     freopen("./playdata.txt", "w", stdout);
+    cout<<nTurns+1<<endl;
     cout<<transpositionTable.size();
     for(auto it:transpositionTable){
         cout<<endl<<it.first<<" "<<it.second;
@@ -143,9 +147,15 @@ void agent::playGame()
     int bestCol = -1;
 
     ZobristHash zobristHash(board);
+    // zobristHash.printTable(); // DEBUG
     // cout<<zobristHash.hash()<<endl; // DEBUG
 
-    cout<<centralHeuristic(board, agentTile)<<endl; // DEBUG
+    // cout<<centralHeuristic(board, agentTile)<<endl; // DEBUG
+    if(nTurns <= 2) {
+        initializeOpeningMoves();
+        cout << getOpeningMove(nTurns, agentTile, zobristHash.hash(), board) << endl;
+        return;
+    }
 
     vector<pii> children;
     vector<pii> range;
@@ -199,8 +209,10 @@ void agent::playGame()
             bestCol = child.second;
         }
     }
-
-    cout << bestRow << " " << bestCol << endl; // DEBUG
+    cout << indices_to_position(bestRow, bestCol) << endl; // DEBUG
+    // cout << bestRow << " " << bestCol << endl; // DEBUG
+    board[bestRow][bestCol] = agentTile; // DEBUG
+    printBoard(board); // DEBUG
 }
 
 // ============================================================================================================================================
