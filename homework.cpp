@@ -14,8 +14,11 @@ using namespace std;
 #define infi 10000000000000
 #define ninfi -10000000000000
 #define pii pair<int, int>
+#define MAX_DEPTH 5
+#define FWD_PRUNE_PERCENT 0.5
 
-unordered_map <uint64_t, long long int > transpositionTable;
+unordered_map <uint64_t, long long int > oldTranspositionTable;
+unordered_map <uint64_t, long long int > newTranspositionTable;
 unordered_map <uint64_t, string > openingMoves;
 
 // TODO =====================================================================================================
@@ -130,59 +133,59 @@ void slidingHeuristic::initializeHeuristicMaps()
 {
     // MAXIMIZE WHITE
     heuristicWindow5W[1950] = infi; // w w w w w
-    heuristicWindow5W[1940] = 10000000; // w w w w _
-    heuristicWindow5W[1910] = 10000000; // w w w _ w
-    heuristicWindow5W[1800] = 100000; // w w _ w w
-    heuristicWindow5W[1450] = 10000000; // w _ w w w
-    heuristicWindow5W[700] = 10000000; // _ w w w w
-    heuristicWindow5W[690] = 1000000; // _ w w w _
-    heuristicWindow5W[980] = 1000000000; // b b b b w
-    heuristicWindow5W[995] = 1000000000; // b b b w b
-    heuristicWindow5W[1050] = 1000000000; // b b w b b
-    heuristicWindow5W[1225] = 1000000000; // b w b b b
-    heuristicWindow5W[1600] = 1000000000; // w b b b b
-    heuristicWindow5W[1595] = 200000; // w b b b _
-    heuristicWindow5W[355] = 200000; // _ b b b w
+    heuristicWindow5W[1940] = 1000000; // w w w w _
+    heuristicWindow5W[1910] = 1000000; // w w w _ w
+    heuristicWindow5W[1800] = 10000; // w w _ w w
+    heuristicWindow5W[1450] = 1000000; // w _ w w w
+    heuristicWindow5W[700] = 1000000; // _ w w w w
+    heuristicWindow5W[690] = 100000; // _ w w w _
+    heuristicWindow5W[980] = 100000000; // b b b b w
+    heuristicWindow5W[995] = 100000000; // b b b w b
+    heuristicWindow5W[1050] = 100000000; // b b w b b
+    heuristicWindow5W[1225] = 100000000; // b w b b b
+    heuristicWindow5W[1600] = 100000000; // w b b b b
+    heuristicWindow5W[1595] = 20000; // w b b b _
+    heuristicWindow5W[355] = 20000; // _ b b b w
 
-    heuristicWindow4W[380] = 10000; // w w w _
-    heuristicWindow4W[138] = 10000; // _ w w w
-    heuristicWindow4W[358] = 8000; // w w _ w
-    heuristicWindow4W[288] = 8000; // w _ w w
-    heuristicWindow4W[315] = 5000; // Dynamic // w b b _
-    heuristicWindow4W[73] = 5000; // Dynamic // _ b b w
-    heuristicWindow4W[198] = 100000; // b b b w
-    heuristicWindow4W[319] = 100000; // w b b b
+    heuristicWindow4W[380] = 1000; // w w w _
+    heuristicWindow4W[138] = 1000; // _ w w w
+    heuristicWindow4W[358] = 800; // w w _ w
+    heuristicWindow4W[288] = 800; // w _ w w
+    heuristicWindow4W[315] = 500; // Dynamic // w b b _
+    heuristicWindow4W[73] = 500; // Dynamic // _ b b w
+    heuristicWindow4W[198] = 10000; // b b b w
+    heuristicWindow4W[319] = 10000; // w b b b
 
-    heuristicWindow4W[280] = 5000; // w _ w _
-    heuristicWindow4B[108] = 5000; // _ w _ w
+    heuristicWindow4W[280] = 500; // w _ w _
+    heuristicWindow4B[108] = 500; // _ w _ w
  
     // MAXIMIZE BLACK
     heuristicWindow5B[975] = infi; // b b b b b
-    heuristicWindow5B[970] = 10000000; // b b b b _
-    heuristicWindow5B[350] = 10000000; // _ b b b b
-    heuristicWindow5W[955] = 10000000; // b b b _ b
-    heuristicWindow5W[900] = 100000; // b b _ b b
-    heuristicWindow5W[725] = 10000000; // b _ b b b
-    heuristicWindow5B[345] = 1000000; // _ b b b _
-    heuristicWindow5B[1945] = 1000000000; // w w w w b
-    heuristicWindow5W[1930] = 1000000000; // w w w b w
-    heuristicWindow5W[1875] = 1000000000; // w w b w w
-    heuristicWindow5W[1700] = 1000000000; // w b w w w
-    heuristicWindow5B[1325] = 1000000000; // b w w w w
-    heuristicWindow5B[1315] = 200000; // b w w w _ 
-    heuristicWindow5B[695] = 200000; // _ w w w b
+    heuristicWindow5B[970] = 1000000; // b b b b _
+    heuristicWindow5B[350] = 1000000; // _ b b b b
+    heuristicWindow5W[955] = 1000000; // b b b _ b
+    heuristicWindow5W[900] = 10000; // b b _ b b
+    heuristicWindow5W[725] = 1000000; // b _ b b b
+    heuristicWindow5B[345] = 100000; // _ b b b _
+    heuristicWindow5B[1945] = 100000000; // w w w w b
+    heuristicWindow5W[1930] = 100000000; // w w w b w
+    heuristicWindow5W[1875] = 100000000; // w w b w w
+    heuristicWindow5W[1700] = 100000000; // w b w w w
+    heuristicWindow5B[1325] = 100000000; // b w w w w
+    heuristicWindow5B[1315] = 20000; // b w w w _ 
+    heuristicWindow5B[695] = 20000; // _ w w w b
 
-    heuristicWindow4B[190] = 10000; // b b b _
-    heuristicWindow4B[69] = 10000; // _ b b b
-    heuristicWindow4B[179] = 8000; // b b _ b
-    heuristicWindow4B[144] = 8000; // b _ b b
-    heuristicWindow4B[255] = 5000; // Dynamic // b w w _
-    heuristicWindow4B[134] = 5000; // Dynamic // _ w w b
-    heuristicWindow4B[384] = 100000; // w w w b
-    heuristicWindow4B[263] = 100000; // b w w w
+    heuristicWindow4B[190] = 1000; // b b b _
+    heuristicWindow4B[69] = 1000; // _ b b b
+    heuristicWindow4B[179] = 800; // b b _ b
+    heuristicWindow4B[144] = 800; // b _ b b
+    heuristicWindow4B[255] = 500; // Dynamic // b w w _
+    heuristicWindow4B[134] = 500; // Dynamic // _ w w b
+    heuristicWindow4B[384] = 10000; // w w w b
+    heuristicWindow4B[263] = 10000; // b w w w
 
-    heuristicWindow4B[140] = 5000; // b _ b _
-    heuristicWindow4B[54] = 5000; // _ b _ b
+    heuristicWindow4B[140] = 500; // b _ b _
+    heuristicWindow4B[54] = 500; // _ b _ b
 }
 
 vector<long long int> slidingHeuristic::hashWindow4(int i, int j)
@@ -438,6 +441,208 @@ int slidingHeuristic::slidingWindowHeuristicPartial(vector<pii>range)
 }
 
 
+long long int needToWin(vector<vector<int> > board, int tile, int wCaps, int bCaps)
+{
+    int opponent = tile == 1 ? 2 : 1;
+
+    int won = 0;
+    int lost = 0;
+    int win1 = 0;
+    int loose1 = 0;
+    int win2 = 0;
+    int loose2 = 0;
+    int win3 = 0;
+    int loose3 = 0;
+    int win4 = 0;
+    int block4 = 0;
+    int block3 = 0;
+
+    // Heuristics
+    long long int WON = infi;
+    long long int LOST = -infi;
+    long long int WIN1 = 100000000000;
+    long long int LOOSE1 = -10000000000;
+    long long int WIN2 = 100000000;
+    long long int LOOSE2 = -10000000;
+    long long int WIN3 = 100000;
+    long long int LOOSE3 = -10000;
+    long long int WIN4 = 100;
+    long long int CAPTURE = 10000000;
+
+
+    // Horizontal
+    for (int i = 0; i < 19; i++)
+    {
+        int countA = 0;
+        int countO = 0;
+        int N = 0;
+        for (int j = 0 ; j < 19; j++)
+        {
+            if(board[i][j] == tile)
+                countA++;
+            else if(board[i][j] == opponent)
+                countO++;
+            
+            if(N<5) N++;
+            else {
+                if(board[i][j-N] == tile)
+                    countA--;
+                else if(board[i][j-N] == opponent)
+                    countO--;
+                
+
+                if(countO == 0) {
+                    if(countA == 5) won++;
+                    else if(countA == 4) win1++;
+                    else if(countA == 3) win2++;
+                    else if(countA == 2) win3++;
+                    else if(countA == 1) win4++;
+                }
+                else if(countA == 0) {
+                    if(countO == 5) lost++;
+                    else if(countO == 4) loose1++;
+                    else if(countO == 3) loose2++;
+                    else if(countO == 2) loose3++;
+                }
+            }
+        }
+        N=0;
+        countA = 0;
+        countO = 0;
+    }
+
+    // Vertical
+    for (int i = 0; i < 19; i++)
+    {
+        int countA = 0;
+        int countO = 0;
+        int N = 0;
+        for (int j = 0 ; j < 19; j++)
+        {
+            if(board[j][i] == tile)
+                countA++;
+            else if(board[j][i] == opponent)
+                countO++;
+            
+            if(N<5) N++;
+            else {
+                if(board[j-N][i] == tile)
+                    countA--;
+                else if(board[j-N][i] == opponent)
+                    countO--;
+                
+
+                if(countO == 0) {
+                    if(countA == 5) won++;
+                    else if(countA == 4) win1++;
+                    else if(countA == 3) win2++;
+                    else if(countA == 2) win3++;
+                    else if(countA == 1) win4++;
+                }
+                else if(countA == 0) {
+                    if(countO == 5) lost++;
+                    else if(countO == 4) loose1++;
+                    else if(countO == 3) loose2++;
+                    else if(countO == 2) loose3++;
+                }
+            }
+        }
+        N = 0;
+        countA = 0;
+        countO = 0;
+    }
+
+    // Diagonal
+    for (int k = 0; k < 19 + 19 - 1; k++) {
+        int countA = 0;
+        int countO = 0;
+        int N = 0;
+        for (int i = 0; i < 19; i++) {
+            int j = k - i;
+            if (j >= 0 && j < 19) {
+                if(board[i][j] == tile)
+                    countA++;
+                else if(board[i][j] == opponent)
+                    countO++;
+                
+                if(N<5) N++;
+                else {
+                    if(board[i-N][j+N] == tile)
+                        countA--;
+                    else if(board[i-N][j+N] == opponent)
+                        countO--;
+                    
+
+                    if(countO == 0) {
+                        if(countA == 5) won++;
+                        else if(countA == 4) win1++;
+                        else if(countA == 3) win2++;
+                        else if(countA == 2) win3++;
+                        else if(countA == 1) win4++;
+                    }
+                    else if(countA == 0) {
+                        if(countO == 5) lost++;
+                        else if(countO == 4) loose1++;
+                        else if(countO == 3) loose2++;
+                        else if(countO == 2) loose3++;
+                    }
+                }
+            }
+        }
+        countA = 0;
+        countO = 0;
+        N=0;
+    }
+
+    // Anti-Diagonal
+    for (int k = 0; k < 19 + 19 - 1; k++) {
+        int countA = 0;
+        int countO = 0;
+        int N = 0;
+        for (int i = 0; i < 19; i++) {
+            int j = k - (19 - i - 1);
+            if (j >= 0 && j < 19) {
+                if(board[i][j] == tile)
+                    countA++;
+                else if(board[i][j] == opponent)
+                    countO++;
+                
+                if(N<5) N++;
+                else {
+                    if(board[i-N][j-N] == tile)
+                        countA--;
+                    else if(board[i-N][j-N] == opponent)
+                        countO--;
+                    
+
+                    if(countO == 0) {
+                        if(countA == 5) won++;
+                        else if(countA == 4) win1++;
+                        else if(countA == 3) win2++;
+                        else if(countA == 2) win3++;
+                        else if(countA == 1) win4++;
+                    }
+                    else if(countA == 0) {
+                        if(countO == 5) lost++;
+                        else if(countO == 4) loose1++;
+                        else if(countO == 3) loose2++;
+                        else if(countO == 2) loose3++;
+                    }
+                }
+            }
+        }
+        countA = 0;
+        countO = 0;
+        N=0;
+    }
+
+    long long int score = won*WON + win1*WIN1 + win2*WIN2 + win3*WIN3 + win4*WIN4 + lost*LOST + loose1*LOOSE1 + loose2*LOOSE2 + loose3*LOOSE3;
+    long long int captureScore = (wCaps - bCaps)*CAPTURE;
+    score += tile == 2 ? captureScore : -captureScore;
+
+    return score;
+}
+
 // TODO =====================================================================================================
 // TODO: OPENING MOVES
 
@@ -521,8 +726,10 @@ long long int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing, i
 {
     // int heuristic = centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
     // return isMaximizing ? heuristic : -heuristic;
-	slidingHeuristic heuristic(currBoard, tile, whiteCaptures, blackCapture);
-	return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
+	// slidingHeuristic heuristic(currBoard, tile, whiteCaptures, blackCapture);
+	// return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
+    return isMaximizing ? needToWin(currBoard, tile, whiteCaptures, blackCapture) : -needToWin(currBoard, tile, whiteCaptures, blackCapture);
+
 }
 
 
@@ -765,14 +972,17 @@ priority_queue <pair<long long int, pii> > moveOrderingMax(vector<pii> children,
 		agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
 		// zobrist.updateHash(newHash); // update hash
 
-		if(transpositionTable[newHash] == 0) {
+		if(oldTranspositionTable[newHash] == 0) {
 			heuristic = evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps); // Heuristic
-			transpositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
+			newTranspositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
+			oldTranspositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
 			// transpositionTable2[newHash] = make_pair(heuristic == 0 ? 1 : heuristic, children[i]);
 			// missCount++; // DEBUG
 		}
-		else
-			heuristic = transpositionTable[newHash];
+		else {
+			heuristic = oldTranspositionTable[newHash];
+            newTranspositionTable[newHash] = oldTranspositionTable[newHash];
+        }
 		// cout<<children[i].first<<" "<<children[i].second<<" "<<heuristic<<endl; // DEBUG
 		
 		moveOrderMax.push(make_pair(heuristic, children[i]));
@@ -807,13 +1017,16 @@ priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Com
 		opponentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
 		// zobrist.updateHash(newHash); // update hash
 
-		if(transpositionTable[newHash] == 0) {
+		if(oldTranspositionTable[newHash] == 0) {
 			heuristic = evaluateBoard(currBoard, isMaximizing, opponentTile, wCaps, bCaps); // Heuristic
-			transpositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
+			oldTranspositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
+			newTranspositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
 			// transpositionTable2[newHash] = make_pair(heuristic == 0 ? 1 : heuristic, children[i]);
 		}
-		else
-			heuristic = transpositionTable[newHash];
+		else {
+			heuristic = oldTranspositionTable[newHash];
+            newTranspositionTable[newHash] = oldTranspositionTable[newHash];
+        }
 		// cout<<children[i].first<<" "<<children[i].second<<" "<<heuristic<<endl; // DEBUG
 		
 		moveOrderMin.push(make_pair(heuristic, children[i]));
@@ -825,14 +1038,18 @@ priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Com
 }
 
 // ALPHA BETA
-long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher, float ForwardPruningPercentage, long long int MinHeuristic)
+long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher, float ForwardPruningPercentage, long long int FractionalPruning)
 {
     int opponentTile = agentTile == 1 ? 2 : 1;
 
     if (depth == 0) {
-		if(transpositionTable[hasher.hash()] == 0)
-	    	return evaluateBoard(currBoard, isMaximizing, isMaximizing ? agentTile : opponentTile , wCaps, bCaps);
-		return transpositionTable[hasher.hash()];
+		if(oldTranspositionTable[hasher.hash()] == 0) {
+	    	long long int value = evaluateBoard(currBoard, isMaximizing, isMaximizing ? agentTile : opponentTile , wCaps, bCaps);
+            newTranspositionTable[hasher.hash()] = value == 0 ? 1 : value;
+            return value;
+        }
+        newTranspositionTable[hasher.hash()] = oldTranspositionTable[hasher.hash()];
+		return oldTranspositionTable[hasher.hash()];
 	}
 	
 	vector<pii> children;
@@ -858,9 +1075,9 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 			moveOrderMax.pop();
 
 			// ?FWD PRUNING
-			if(moveOrderMax.size() < fwdPruningChildren*(1+ (2-depth)*0.5))
+			if(moveOrderMax.size() < fwdPruningChildren)
 				break;
-			if(heuristic < maxHeuristic/MinHeuristic)
+			if(maxHeuristic > 0 && heuristic < maxHeuristic/FractionalPruning)
 				break;
 
             currBoard[child.first][child.second] = agentTile;
@@ -881,7 +1098,7 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
             // printBoard(board); // DEBUG
 
 			hasher.updateHash(hash); // update hash for captures
-            long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, false, agentTile, hasher, ForwardPruningPercentage, MinHeuristic);
+            long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, false, agentTile, hasher, ForwardPruningPercentage, FractionalPruning);
 
 
             currBoard[child.first][child.second] = 0;
@@ -912,9 +1129,9 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 			moveOrderMin.pop();
 
 			// ?FWD PRUNING
-			if(moveOrderMin.size() < fwdPruningChildren*(1+ (2-depth)*0.5))
+			if(moveOrderMin.size() < fwdPruningChildren)
 				break;
-			if(heuristic > (minHeuristic>0 ? minHeuristic/MinHeuristic : -1*minHeuristic/MinHeuristic))
+			if(minHeuristic<0 && heuristic > minHeuristic/FractionalPruning)
 				break;
 
 			vector<vector<int> > newBoard = currBoard;
@@ -936,7 +1153,7 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
             // printBoard(board); // DEBUG
 			
 			hasher.updateHash(hash); // update hash for captures
-            long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, true, agentTile, hasher, ForwardPruningPercentage, MinHeuristic);
+            long long int value = alphaBeta(newBoard, wCaps, bCaps, depth - 1, alpha, beta, true, agentTile, hasher, ForwardPruningPercentage, FractionalPruning);
 
 			opponentTile == 1 ? bCaps -= numCaptures : wCaps -= numCaptures; // undo captures
 			hasher.updateHash(oldHash); // update hash for undoing move
@@ -950,7 +1167,40 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
     }
 }
 
+// TODO =====================================================================================================
+// TODO: HELPERS
+// print 2d vector
+void printBoard(vector<vector<int> > board)
+{
+    for (size_t i = 0; i < board.size(); i++)
+    {
+        for (size_t j = 0; j < board[i].size(); j++)
+        {
+            cout << board[i][j] << " ";
+        }
+        cout << endl;
+    }
+    cout<<endl;
+}
 
+// print array of pairs
+void printPairs(vector<pair<int, int> > moves)
+{
+    for (size_t i = 0; i < moves.size(); i++)
+    {
+        cout << moves[i].first << " " << moves[i].second << endl;
+    }
+}
+
+// print 1d vector
+void printVector(vector<int> moves)
+{
+    for (size_t i = 0; i < moves.size(); i++)
+    {
+        cout << moves[i] << " ";
+    }
+    cout << endl;
+}
 
 // TODO =====================================================================================================
 // TODO: AGENT FUNCTION
@@ -977,14 +1227,14 @@ private:
     // Hyperparameters
     int maxDepth;
     float FwdPrunePercent;
-    long long int MinHeuristic;
+    long long int FractionalPruning;
 
 public:
     agent(string path);
     ~agent();
     // void printData();
     void playGame();
-    long long int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing);
+    // long long int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing);
 };
 
 agent::agent(string path)
@@ -1014,9 +1264,9 @@ agent::agent(string path)
     }
     fclose(stdin);
 
-    maxDepth = 2;
-    FwdPrunePercent = 0.2;
-    MinHeuristic = 1000;
+    maxDepth = MAX_DEPTH;
+    FwdPrunePercent = 0.5;
+    FractionalPruning = 100;
 
     // read playdata.txt
     freopen("./playdata.txt", "r", stdin);
@@ -1036,7 +1286,7 @@ agent::agent(string path)
         uint64_t hash;
         long long int heuristic;
         cin>>hash>>heuristic;
-        transpositionTable[hash] = heuristic;
+        oldTranspositionTable[hash] = heuristic;
     }
     fclose(stdin);
  
@@ -1065,8 +1315,8 @@ agent::~agent()
 {   
     freopen("./playdata.txt", "w", stdout);
     cout<<nTurns+1<<endl;
-    cout<<transpositionTable.size();
-    for(auto it:transpositionTable){
+    cout<<newTranspositionTable.size();
+    for(auto it:newTranspositionTable){
         cout<<endl<<it.first<<" "<<it.second;
     }
     fclose(stdout);
@@ -1110,11 +1360,11 @@ void agent::playGame()
         long long int heuristic = moveOrder.top().first;
         pii child = moveOrder.top().second;
         moveOrder.pop();
-        // cout << heuristic << " " << child.first << " " << child.second << endl; // DEBUG
+        cout << heuristic << " " << child.first << " " << child.second << endl; // DEBUG
 
         if(moveOrder.size() < fwdPruningChildren)
 			break;
-        if(heuristic < maxHeuristic/MinHeuristic)
+        if(maxHeuristic > 0 && heuristic < maxHeuristic/FractionalPruning)
             break;
 
         vector<vector<int> > currBoard = board;
@@ -1140,7 +1390,7 @@ void agent::playGame()
         zobristHash.updateHash(hash); // update hash for captures
         // cout<<zobristHash.hash()<<" "; // DEBUG
         
-        long long int value = alphaBeta(currBoard, whiteCaptures, blackCaptures, maxDepth, INT_MIN, INT_MAX, false, agentTile, zobristHash, FwdPrunePercent, MinHeuristic);
+        long long int value = alphaBeta(currBoard, whiteCaptures, blackCaptures, maxDepth, INT_MIN, INT_MAX, false, agentTile, zobristHash, FwdPrunePercent, FractionalPruning);
         
         board[child.first][child.second] = 0;
         agentTile == 1 ? blackCaptures -= numCaps : whiteCaptures -= numCaps;
@@ -1154,7 +1404,9 @@ void agent::playGame()
             bestCol = child.second;
         }
     }
-    cout << indices_to_position(bestRow, bestCol) << endl; // DEBUG
+    // freopen("output.txt", "w", stdout);
+    cout << indices_to_position(bestRow, bestCol) << endl;
+    // fclose(stdout);
     // cout << bestRow << " " << bestCol << endl; // DEBUG
     // board[bestRow][bestCol] = agentTile; // DEBUG
     // printBoard(board); // DEBUG
