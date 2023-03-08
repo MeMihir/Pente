@@ -14,7 +14,7 @@ using namespace std;
 #define infi 10000000000000
 #define ninfi -10000000000000
 #define pii pair<int, int>
-#define MAX_DEPTH 5
+#define MAX_DEPTH 2
 #define FWD_PRUNE_PERCENT 0.5
 
 unordered_map <uint64_t, long long int > oldTranspositionTable;
@@ -670,7 +670,7 @@ string getOpeningMove(int nTurn, int agentTile, uint64_t hash, vector <vector <i
     if(nTurn == 1 && agentTile == 1) return "K9";
     
     // white second move
-    cout<<"hash: "<<hash<<endl;
+    // cout<<"hash: "<<hash<<endl;
     if(openingMoves[hash] != "") return openingMoves[hash];
     if(nTurn == 2 && agentTile == 2) {
         int blackI = -1, blackJ = -1;
@@ -1223,6 +1223,7 @@ private:
     double time;
     int agentTile; // 1 = black, 2 = white
     int nTurns;
+    string BEST_MOVE;
 
     // Hyperparameters
     int maxDepth;
@@ -1272,21 +1273,23 @@ agent::agent(string path)
     freopen("./playdata.txt", "r", stdin);
     if (cin.fail()) // file not found
     {
-        freopen("./playdata.txt", "w", stdout);
-        cout << "1" << endl << "0" << endl;
-        fclose(stdout);
-        freopen("./playdata.txt", "r", stdin);
+        // freopen("./playdata.txt", "w", stdout);
+        // cout << "2" << endl << "0" << endl;
+        // fclose(stdout);
+        // freopen("./playdata.txt", "r", stdin);
+        nTurns = 1;
     }
-
-    int nHeuristics;
-    cin >> nTurns;
-    cin >> nHeuristics;
-    for (int i = 0; i < nHeuristics; i++)
-    {
-        uint64_t hash;
-        long long int heuristic;
-        cin>>hash>>heuristic;
-        oldTranspositionTable[hash] = heuristic;
+    else {
+        int nHeuristics;
+        cin >> nTurns;
+        cin >> nHeuristics;
+        for (int i = 0; i < nHeuristics; i++)
+        {
+            uint64_t hash;
+            long long int heuristic;
+            cin>>hash>>heuristic;
+            oldTranspositionTable[hash] = heuristic;
+        }
     }
     fclose(stdin);
  
@@ -1313,6 +1316,10 @@ agent::agent(string path)
 
 agent::~agent()
 {   
+    freopen("./output.txt", "w", stdout);
+    cout<<BEST_MOVE<<endl;
+    fclose(stdout);
+
     freopen("./playdata.txt", "w", stdout);
     cout<<nTurns+1<<endl;
     cout<<newTranspositionTable.size();
@@ -1340,7 +1347,7 @@ void agent::playGame()
     // cout<<centralHeuristic(board, agentTile)<<endl; // DEBUG
     if(nTurns <= 2) {
         initializeOpeningMoves();
-        cout << getOpeningMove(nTurns, agentTile, zobristHash.hash(), board) << endl;
+        BEST_MOVE = getOpeningMove(nTurns, agentTile, zobristHash.hash(), board);
         return;
     }
 
@@ -1354,6 +1361,17 @@ void agent::playGame()
     int numChildren = children.size();
 	int fwdPruningChildren = numChildren*FwdPrunePercent;
     long long int maxHeuristic = moveOrder.top().first;
+
+
+    // DEPTH ADJUSTMENT
+    // if(maxHeuristic < 10000000)
+    //     maxDepth = MAX_DEPTH - 1;
+    if(time < 120)
+        maxDepth = MAX_DEPTH - 1;
+    if(time < 10)
+        maxDepth = MAX_DEPTH - 2;
+
+    cout<<maxDepth<<endl;
 
     while(!moveOrder.empty())
     {
@@ -1381,7 +1399,7 @@ void agent::playGame()
         agentTile == 1 ? blackCaptures += numCaps : whiteCaptures += numCaps;
         if(checkWin(currBoard, whiteCaptures, blackCaptures, agentTile, child.first, child.second))
         {
-            cout<<indices_to_position(child.first, child.second);
+            BEST_MOVE = indices_to_position(child.first, child.second);
             return;
         }
             
@@ -1405,7 +1423,7 @@ void agent::playGame()
         }
     }
     // freopen("output.txt", "w", stdout);
-    cout << indices_to_position(bestRow, bestCol) << endl;
+    BEST_MOVE = indices_to_position(bestRow, bestCol);
     // fclose(stdout);
     // cout << bestRow << " " << bestCol << endl; // DEBUG
     // board[bestRow][bestCol] = agentTile; // DEBUG
