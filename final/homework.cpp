@@ -7,6 +7,8 @@
 #include <string>
 #include <tuple>
 #include <queue>
+#include <fstream>
+#include <climits>
 #include <unordered_map>
 
 using namespace std;
@@ -14,7 +16,7 @@ using namespace std;
 #define infi 10000000000000
 #define ninfi -10000000000000
 #define pii pair<int, int>
-#define MAX_DEPTH 2
+#define MAX_DEPTH 3
 #define FWD_PRUNE_PERCENT 0.5
 
 unordered_map <uint64_t, long long int > oldTranspositionTable;
@@ -467,7 +469,9 @@ long long int needToWin(vector<vector<int> > board, int tile, int wCaps, int bCa
     long long int WIN3 = 100000;
     long long int LOOSE3 = -10000;
     long long int WIN4 = 100;
-    long long int CAPTURE = 10000000;
+    long long int CAPTURE = 1000000000;
+    long long int BLOCK4 = 1000000000000;
+    long long int BLOCK3 = 1000000000;
 
 
     // Horizontal
@@ -503,6 +507,10 @@ long long int needToWin(vector<vector<int> > board, int tile, int wCaps, int bCa
                     else if(countO == 4) loose1++;
                     else if(countO == 3) loose2++;
                     else if(countO == 2) loose3++;
+                }
+                else {
+                    if(countO == 4 && countA == 1) block4++;
+                    else if(countO == 3 && countA == 1) block3++;
                 }
             }
         }
@@ -545,6 +553,10 @@ long long int needToWin(vector<vector<int> > board, int tile, int wCaps, int bCa
                     else if(countO == 3) loose2++;
                     else if(countO == 2) loose3++;
                 }
+                else {
+                    if(countO == 4 && countA == 1) block4++;
+                    else if(countO == 3 && countA == 1) block3++;
+                }
             }
         }
         N = 0;
@@ -585,6 +597,10 @@ long long int needToWin(vector<vector<int> > board, int tile, int wCaps, int bCa
                         else if(countO == 4) loose1++;
                         else if(countO == 3) loose2++;
                         else if(countO == 2) loose3++;
+                    }
+                    else {
+                        if(countO == 4 && countA == 1) block4++;
+                        else if(countO == 3 && countA == 1) block3++;
                     }
                 }
             }
@@ -628,6 +644,10 @@ long long int needToWin(vector<vector<int> > board, int tile, int wCaps, int bCa
                         else if(countO == 3) loose2++;
                         else if(countO == 2) loose3++;
                     }
+                    else {
+                        if(countO == 4 && countA == 1) block4++;
+                        else if(countO == 3 && countA == 1) block3++;
+                    }
                 }
             }
         }
@@ -636,9 +656,10 @@ long long int needToWin(vector<vector<int> > board, int tile, int wCaps, int bCa
         N=0;
     }
 
-    long long int score = won*WON + win1*WIN1 + win2*WIN2 + win3*WIN3 + win4*WIN4 + lost*LOST + loose1*LOOSE1 + loose2*LOOSE2 + loose3*LOOSE3;
+    long long int score = won*WON + win1*WIN1 + win2*WIN2 + win3*WIN3 + win4*WIN4 + lost*LOST + loose1*LOOSE1 + loose2*LOOSE2 + loose3*LOOSE3 + block4*BLOCK4 + block3*BLOCK3;
     long long int captureScore = (wCaps - bCaps)*CAPTURE;
-    score += tile == 2 ? captureScore : -captureScore;
+    if(tile == 2) score += captureScore;
+    else score -= captureScore;
 
     return score;
 }
@@ -648,26 +669,26 @@ long long int needToWin(vector<vector<int> > board, int tile, int wCaps, int bCa
 
 void initializeOpeningMoves()
 {
-    openingMoves[9101533770646912702] = "K10"; // opening white
-    openingMoves[13777879953909322134] = "K9"; // opening black
-    openingMoves[7886114032676240813] = "N10"; // K9
-    openingMoves[15510469182678292660] = "N10"; // L9
-    openingMoves[3024958866278058490] = "N10"; // M9
-    openingMoves[17578088071886051271] = "N10"; // N9
-    openingMoves[10943431002829706131] = "J7"; // O9
-    openingMoves[4033035296802732547] = "L13"; // K8
-    openingMoves[17167260374030425187] = "K14"; // M8
-    openingMoves[7559183552038571392] = "N11"; // N8
-    openingMoves[1554884274173108145] = "H7"; // O8
-    openingMoves[16097626642881148955] = "N12"; // O7
-    openingMoves[10367220700633438709] = "G9"; // K7
+    openingMoves[9101533770646912702] = "10K"; // opening white
+    openingMoves[13777879953909322134] = "9K"; // opening black
+    openingMoves[7886114032676240813] = "10N"; // K9
+    openingMoves[15510469182678292660] = "10N"; // L9
+    openingMoves[3024958866278058490] = "10N"; // M9
+    openingMoves[17578088071886051271] = "10N"; // N9
+    openingMoves[10943431002829706131] = "7J"; // O9
+    openingMoves[4033035296802732547] = "13L"; // K8
+    openingMoves[17167260374030425187] = "14K"; // M8
+    openingMoves[7559183552038571392] = "11N"; // N8
+    openingMoves[1554884274173108145] = "7H"; // O8
+    openingMoves[16097626642881148955] = "12N"; // O7
+    openingMoves[10367220700633438709] = "9G"; // K7
 }
 
 string getOpeningMove(int nTurn, int agentTile, uint64_t hash, vector <vector <int> > board)
 {
     // opening moves
-    if(nTurn == 1 && agentTile == 2) return "K10";
-    if(nTurn == 1 && agentTile == 1) return "K9";
+    if(nTurn == 1 && agentTile == 2) return "10K";
+    if(nTurn == 1 && agentTile == 1) return "9K";
     
     // white second move
     // cout<<"hash: "<<hash<<endl;
@@ -685,13 +706,13 @@ string getOpeningMove(int nTurn, int agentTile, uint64_t hash, vector <vector <i
             if(blackI != -1) break;
         }
 
-        if(blackI <= 9 && blackJ <= 9 && blackJ >= blackI) return "N10";
-        if(blackI <= 9 && blackJ <= 9 && blackJ < blackI) return "N13";
-        if(blackI <= 9 && blackJ >= 10 && blackJ + blackI < 19) return "G10";
-        if(blackI <= 9 && blackJ >= 10 && blackJ + blackI >= 19) return "G13";
-        if(blackI >= 10 && blackJ <= 9 && blackJ + blackI < 19) return "K13";
-        if(blackI >= 10 && blackJ <= 9 && blackJ + blackI >= 19) return "G13";
-        if(blackI >= 10 && blackJ >= 10 && blackJ >= blackI) return "K13";
+        if(blackI <= 9 && blackJ <= 9 && blackJ >= blackI) return "10N";
+        if(blackI <= 9 && blackJ <= 9 && blackJ < blackI) return "13N";
+        if(blackI <= 9 && blackJ >= 10 && blackJ + blackI < 19) return "10G";
+        if(blackI <= 9 && blackJ >= 10 && blackJ + blackI >= 19) return "13G";
+        if(blackI >= 10 && blackJ <= 9 && blackJ + blackI < 19) return "13K";
+        if(blackI >= 10 && blackJ <= 9 && blackJ + blackI >= 19) return "13G";
+        if(blackI >= 10 && blackJ >= 10 && blackJ >= blackI) return "13K";
         return "K10";
     }
 
@@ -710,14 +731,36 @@ string getOpeningMove(int nTurn, int agentTile, uint64_t hash, vector <vector <i
         }
 
         // !RECHECK
-        if(whiteI <= 9 && whiteJ <= 9 && whiteJ > whiteI) return "K11";
-        if(whiteI < 9 && whiteJ <= 9 && whiteJ <= whiteI) return "J11";
-        if(whiteI <= 9 && whiteJ >= 10 && whiteJ + whiteI <= 19) return "L11";
-        if(whiteI <= 9 && whiteJ >= 10 && whiteJ + whiteI > 19) return "L10";
-        if(whiteI >= 10 && whiteJ <= 9 && whiteJ + whiteI <= 19) return "L10";
-        if(whiteI >= 10 && whiteJ <= 9 && whiteJ + whiteI >= 19) return "J9";
-        if(whiteI >= 10 && whiteJ >= 10 && whiteJ >= whiteI) return "J8";
-        return "L9";
+        if(whiteI <= 9 && whiteJ <= 9 && whiteJ > whiteI) {
+            if(board[8][9] == 2) return "12K";
+            return "11K";
+        }
+        if(whiteI < 9 && whiteJ <= 9 && whiteJ <= whiteI) {
+            if(board[8][8] == 2) return "12H";
+            return "11J";
+        }
+        if(whiteI <= 9 && whiteJ >= 10 && whiteJ + whiteI <= 19) {
+            if(board[8][10] == 2) return "12M";
+            return "11L";
+        }
+        if(whiteI <= 9 && whiteJ >= 10 && whiteJ + whiteI > 19) {
+            if(board[9][10] == 2) return "10M";
+            return "10L";
+        }
+        if(whiteI >= 10 && whiteJ <= 9 && whiteJ + whiteI <= 19) {
+            if(board[9][8] == 2) return "10M";
+            return "10L";
+        }
+        if(whiteI >= 10 && whiteJ <= 9 && whiteJ + whiteI >= 19) {
+            if(board[10][8] == 2) return "11L";
+            return "9J";
+        }
+        if(whiteI >= 10 && whiteJ >= 10 && whiteJ >= whiteI) {
+            if(board[11][8] == 2) return "9J";
+            return "8J";
+        }
+        if(board[10][10] == 2) return "11J";
+        return "9L";
     }
     return "";
 }
@@ -912,7 +955,7 @@ pair<vector<pii>, vector<pii> > getChildren(vector<vector<int> > currBoard)
 {
 	// int R = 4;
 	int R = 2;
-    vector<pii> children;
+    vector<pii> children(0);
     vector<pii> range(19, pair<int, int>(19, -1)); // [start, end] inclusive
 
     for (int i = 0; i < 19; i++)
@@ -1052,8 +1095,8 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 		return oldTranspositionTable[hasher.hash()];
 	}
 	
-	vector<pii> children;
-	vector<pii> range;
+	vector<pii> children(0);
+	vector<pii> range(0);
 	tie(children, range) = getChildren(currBoard);
 	int numChildren = children.size();
 	int fwdPruningChildren = numChildren*ForwardPruningPercentage;
@@ -1209,7 +1252,7 @@ string indices_to_position(int row, int column) {
     if(column >= 8) column++;
     char letter = static_cast<char>(column + 'A');
     string number = to_string(19 - row);
-    return string(1, letter) + number;
+    return number + string(1, letter) ;
 }
 
 
@@ -1270,16 +1313,15 @@ agent::agent(string path)
     FractionalPruning = 100;
 
     // read playdata.txt
-    freopen("./playdata.txt", "r", stdin);
-    if (cin.fail()) // file not found
+
+    FILE *fp = fopen("playdata.txt", "r");
+    if(fp == NULL)
     {
-        // freopen("./playdata.txt", "w", stdout);
-        // cout << "2" << endl << "0" << endl;
-        // fclose(stdout);
-        // freopen("./playdata.txt", "r", stdin);
         nTurns = 1;
     }
     else {
+        fclose(fp);
+        freopen("./playdata.txt", "r", stdin);
         int nHeuristics;
         cin >> nTurns;
         cin >> nHeuristics;
@@ -1290,8 +1332,9 @@ agent::agent(string path)
             cin>>hash>>heuristic;
             oldTranspositionTable[hash] = heuristic;
         }
+        fclose(stdin);
     }
-    fclose(stdin);
+    
  
     // cout<<nHeuristics<<transpositionTable.size()<<endl;
 
@@ -1316,11 +1359,14 @@ agent::agent(string path)
 
 agent::~agent()
 {   
-    freopen("./output.txt", "w", stdout);
-    cout<<BEST_MOVE<<endl;
-    fclose(stdout);
+    
+    // write best move to output.txt
+    fstream fout;
+    fout.open("output.txt", ios::out);
+    fout << BEST_MOVE;
+    fout.close();
 
-    freopen("./playdata.txt", "w", stdout);
+    freopen("playdata.txt", "w", stdout);
     cout<<nTurns+1<<endl;
     cout<<newTranspositionTable.size();
     for(auto it:newTranspositionTable){
@@ -1351,16 +1397,25 @@ void agent::playGame()
         return;
     }
 
-    vector<pii> children;
-    vector<pii> range;
+    vector<pii> children(0);
+    vector<pii> range(0);
     priority_queue<pair<long long int, pii> > moveOrder;
 	tie(children, range) = getChildren(board);
     // cout << children.size() << endl; // DEBUG
 
     moveOrder = moveOrderingMax(children, board, agentTile, true, whiteCaptures, blackCaptures, zobristHash, range);
     int numChildren = children.size();
-	int fwdPruningChildren = numChildren*FwdPrunePercent;
     long long int maxHeuristic = moveOrder.top().first;
+
+
+    // FWD PRUNING ADJUSTMENT
+    if(numChildren >70 && maxDepth == MAX_DEPTH)
+        FwdPrunePercent = 0.3;
+    else
+        FwdPrunePercent = 0.5;
+
+	int fwdPruningChildren = numChildren*FwdPrunePercent;
+    // cout<<numChildren<<" "<<fwdPruningChildren<<endl; // DEBUG
 
 
     // DEPTH ADJUSTMENT
@@ -1371,14 +1426,12 @@ void agent::playGame()
     if(time < 10)
         maxDepth = MAX_DEPTH - 2;
 
-    cout<<maxDepth<<endl;
-
     while(!moveOrder.empty())
     {
         long long int heuristic = moveOrder.top().first;
         pii child = moveOrder.top().second;
         moveOrder.pop();
-        cout << heuristic << " " << child.first << " " << child.second << endl; // DEBUG
+        // cout << heuristic << " " << indices_to_position(child.first, child.second) << endl; // DEBUG
 
         if(moveOrder.size() < fwdPruningChildren)
 			break;
@@ -1432,16 +1485,16 @@ void agent::playGame()
 
 int main()
 {
-    agent a("input/input.txt");
+    agent a("input.txt");
     // a.printData(); // DEBUG
-    auto start = chrono::high_resolution_clock::now();
+    // auto start = chrono::high_resolution_clock::now();
     a.playGame();
-    auto end = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
-    int minutes = chrono::duration_cast<chrono::minutes>(duration).count();
-    int seconds = chrono::duration_cast<chrono::seconds>(duration).count() - minutes * 60;
-    int milliseconds = chrono::duration_cast<chrono::milliseconds>(duration).count() - minutes * 60 * 1000 - seconds * 1000;
-    cout << "Time taken: " << minutes << " minutes " << seconds << " seconds " << milliseconds << " milliseconds" << endl;
+    // auto end = chrono::high_resolution_clock::now();
+    // auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    // int minutes = chrono::duration_cast<chrono::minutes>(duration).count();
+    // int seconds = chrono::duration_cast<chrono::seconds>(duration).count() - minutes * 60;
+    // int milliseconds = chrono::duration_cast<chrono::milliseconds>(duration).count() - minutes * 60 * 1000 - seconds * 1000;
+    // cout << "Time taken: " << minutes << " minutes " << seconds << " seconds " << milliseconds << " milliseconds" << endl;
 
     return 0;
 }

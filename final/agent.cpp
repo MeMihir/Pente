@@ -201,8 +201,8 @@ void agent::playGame()
 
         if(moveOrder.size() < fwdPruningChildren)
 			break;
-        if(heuristic < maxHeuristic/MinHeuristic)
-            break;
+        // if(heuristic < maxHeuristic/MinHeuristic)
+        //     break;
 
         board[child.first][child.second] = agentTile;
         vector<vector<int> > currBoard = board;
@@ -252,7 +252,7 @@ void agent::playGame()
 int main()
 {
     agent a("input/input.txt");
-    a.printData(); // DEBUG
+    // a.printData(); // DEBUG
     auto start = chrono::high_resolution_clock::now();
     a.playGame();
     auto end = chrono::high_resolution_clock::now();
