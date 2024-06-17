@@ -1,11 +1,12 @@
 // src/components/Square.js
-import React from 'react';
+import React from "react";
 
 const Square = ({ value, onClick }) => {
   return (
-    <button className="square plus" onClick={onClick}>
-      
-    </button>
+    <button
+      className={`square ${!value && "plus"} ${value}`}
+      onClick={onClick}
+    ></button>
   );
 };
 
