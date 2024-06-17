@@ -27,8 +27,30 @@ const Board = () => {
 
   const renderBoard = () => {
     let board = [];
+    // Add column indexes
+    let header = [<div key="top-left" className="board-cell"></div>]; // Empty top-left cell
+    header.push(<Square value={null} key={"x"} header={"X"} />);
+    for (let i = 0; i < 19; i++) {
+      header.push(
+        <Square
+          value={null}
+          key={i}
+          header={
+            i > 7 ? String.fromCharCode(i + 66) : String.fromCharCode(i + 65)
+          }
+        />
+      );
+    }
+    board.push(
+      <div key="header" className="board-row">
+        {header}
+      </div>
+    );
+
     for (let i = 0; i < 19; i++) {
       let row = [];
+      // Add row index
+      row.push(<Square value={null} key={i} header={i + 1} />);
       for (let j = 0; j < 19; j++) {
         row.push(renderSquare(i * 19 + j));
       }
