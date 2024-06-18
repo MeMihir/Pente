@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import Square from "./Square";
 import { penteEngine } from "../services/randomEngine";
 
-const Board = () => {
+const Board = ({ onMove }) => {
   const [squares, setSquares] = useState(Array(19 * 19).fill(null));
   const [isUserTurn, setIsUserTurn] = useState(true);
 
@@ -13,11 +13,13 @@ const Board = () => {
     const newSquares = squares.slice();
     newSquares[i] = "X";
     setSquares(newSquares);
+    onMove({ player: 'X', position: `${Math.floor(i / 19) + 1}${String.fromCharCode((i % 19) + 65)}` });
     setIsUserTurn(false);
 
     const aiMove = penteEngine(newSquares);
     newSquares[aiMove] = "O";
     setSquares(newSquares);
+    onMove({ player: 'O', position: `${Math.floor(aiMove / 19) + 1}${String.fromCharCode((aiMove % 19) + 65)}` });
     setIsUserTurn(true);
   };
 

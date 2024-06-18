@@ -92,3 +92,35 @@ button {
 button:hover {
   background-color: #45a049;
 }
+
+/* MOVES TABLE */
+
+.moves-table {
+  margin-top: 20px;
+  height: 25rem;
+  overflow: scroll;
+}
+
+.moves-table table {
+  width: 100%;
+  border-collapse: collapse;
+
+}
+
+.moves-table th,
+.moves-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.moves-table th {
+  background-color: #f2f2f2;
+}
+
+.moves-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.moves-table tr:hover {
+  background-color: #ddd;
+}

@@ -1,14 +1,21 @@
 // src/App.js
-import React from 'react';
-import Board from './components/Board';
-import './App.css';
+import React, { useState } from "react";
+import Board from "./components/Board";
+import "./App.css";
+import MovesTable from "./components/MovesTable";
 
 const App = () => {
+  const [moves, setMoves] = useState([]);
+
+  const handleMove = (move) => {
+    setMoves((moves) => [...moves, move]);
+  };
+
   return (
     <div className="App">
       <h1>Pente Game</h1>
       <div className="game-container">
-        <Board />
+        <Board onMove={handleMove} />
         <div className="game-info">
           <h2>Captures:</h2>
           <div>
@@ -20,6 +27,7 @@ const App = () => {
           <button>Change Game</button>
           <button>Play as White</button>
           <button>Use Opening Book</button>
+          <MovesTable moves={moves} />
         </div>
       </div>
     </div>
