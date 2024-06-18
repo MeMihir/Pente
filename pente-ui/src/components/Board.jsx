@@ -14,6 +14,12 @@ const Board = ({ onMove }) => {
     loadWasm().then((engine) => setPenteEngine(engine));
   }, []);
 
+  const move2coord = (move) => {
+    const x = move % BOARD_SIZE;
+    const y = Math.floor(move / BOARD_SIZE);
+    const z = x > 7 ? String.fromCharCode(x + 66) : String.fromCharCode(x + 65);
+    return [z, y + 1];
+  };
   
   const handleClick = async (i) => {
     if (squares[i] || !isUserTurn || !penteEngine) return;
@@ -22,12 +28,16 @@ const Board = ({ onMove }) => {
     newSquares[i] = 1; // User's move
     setSquares(newSquares);
     setIsUserTurn(false);
+    let coord = move2coord(i);
+    onMove({ position: `${coord[0]}${coord[1]}`, player: "X" });
 
     const boardPtr = penteEngine.malloc(newSquares.length * Int32Array.BYTES_PER_ELEMENT);
     penteEngine.HEAP32.set(new Int32Array(newSquares), boardPtr / Int32Array.BYTES_PER_ELEMENT);
 
     const aiMove = await penteEngine.getNextMove(boardPtr);
     // const aiMove = randomEngine(newSquares);
+    coord = move2coord(aiMove);
+    onMove({ position: `${coord[0]}${coord[1]}`, player: "X" });
 
     penteEngine.free(boardPtr);
 
