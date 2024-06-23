@@ -5,10 +5,14 @@ import { randomEngine, loadWasm } from "../services/Engine";
 
 const BOARD_SIZE = 19;
 
-const Board = ({ onMove }) => {
-  const [squares, setSquares] = useState(Array(BOARD_SIZE * BOARD_SIZE).fill(null));
+const Board = ({ onMove, numMoves }) => {
+  const [squares, setSquares] = useState(
+    Array(BOARD_SIZE * BOARD_SIZE).fill(null)
+  );
   const [isUserTurn, setIsUserTurn] = useState(true);
   const [penteEngine, setPenteEngine] = useState(null);
+  const [whiteCapture, setWhiteCapture] = useState(0);
+  const [blackCapture, setBlackCapture] = useState(0);
 
   useEffect(() => {
     loadWasm().then((engine) => setPenteEngine(engine));
@@ -20,29 +24,67 @@ const Board = ({ onMove }) => {
     const z = x > 7 ? String.fromCharCode(x + 66) : String.fromCharCode(x + 65);
     return [z, y + 1];
   };
-  
+
   const handleClick = async (i) => {
     if (squares[i] || !isUserTurn || !penteEngine) return;
 
     const newSquares = squares.slice();
-    newSquares[i] = 1; // User's move
+    newSquares[i] = 2; // User's move
     setSquares(newSquares);
     setIsUserTurn(false);
     let coord = move2coord(i);
     onMove({ position: `${coord[0]}${coord[1]}`, player: "X" });
 
-    const boardPtr = penteEngine.malloc(newSquares.length * Int32Array.BYTES_PER_ELEMENT);
-    penteEngine.HEAP32.set(new Int32Array(newSquares), boardPtr / Int32Array.BYTES_PER_ELEMENT);
+    const boardPtr = penteEngine.malloc(
+      BOARD_SIZE * BOARD_SIZE * Int32Array.BYTES_PER_ELEMENT
+    );
 
-    const aiMove = await penteEngine.getNextMove(boardPtr);
-    // const aiMove = randomEngine(newSquares);
+    penteEngine.HEAP32.set(new Int32Array(newSquares), boardPtr / Int32Array.BYTES_PER_ELEMENT);
+    
+    // let testBoard = [];
+    // for (let i = 0; i < 19; i++) {
+    //   const row = [];
+    //   for (let j = 0; j < 19; j++) {
+    //     const value = penteEngine.HEAP32[(boardPtr / Int32Array.BYTES_PER_ELEMENT) + (i * 19 + j)];
+    //     row.push(value);
+    //   }
+    //   testBoard.push(row);
+    // }
+    // console.log(testBoard);
+
+    console.log("newSquares", newSquares);
+
+    console.log(numMoves?.length)
+
+    const aiMove = await penteEngine.getNextMove(
+      boardPtr,
+      whiteCapture,
+      blackCapture,
+      300,
+      1,
+      Math.ceil(numMoves?.length/2)+1
+    );
+
+    // testBoard = [];
+    // for (let i = 0; i < 19; i++) {
+    //   const row = [];
+    //   for (let j = 0; j < 19; j++) {
+    //     const value = penteEngine.HEAP32[(boardPtr / Int32Array.BYTES_PER_ELEMENT) + (i * 19 + j)];
+    //     row.push(value);
+    //   }
+    //   testBoard.push(row);
+    // }
+    // console.log(testBoard);
+
+    console.log(aiMove);
     coord = move2coord(aiMove);
+    console.log("aiMove", aiMove, coord);
     onMove({ position: `${coord[0]}${coord[1]}`, player: "X" });
 
     penteEngine.free(boardPtr);
 
     if (aiMove !== -1) {
-      newSquares[aiMove] = 2; // AI's move
+      newSquares[aiMove] = 1; // AI's move
       setSquares(newSquares);
     }
 
@@ -50,7 +92,13 @@ const Board = ({ onMove }) => {
   };
 
   const renderSquare = (i) => {
-    return <Square key={i} value={squares[i]} onClick={() => handleClick(i)} />;
+    return (
+      <Square
+        key={i}
+        value={squares[i] && (squares[i] === 1 ? "X" : "O")}
+        onClick={() => handleClick(i)}
+      />
+    );
   };
 
   const renderBoard = () => {

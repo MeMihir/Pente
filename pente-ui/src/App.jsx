@@ -15,7 +15,7 @@ const App = () => {
     <div className="App">
       <h1>Pente Game</h1>
       <div className="game-container">
-        <Board onMove={handleMove} />
+        <Board onMove={handleMove} numMoves={moves} />
         <div className="game-info">
           <h2>Captures:</h2>
           <div>
