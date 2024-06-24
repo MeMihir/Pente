@@ -448,7 +448,7 @@ int slidingHeuristic::slidingWindowHeuristicPartial(vector<pii>range)
 
 
 long long int needToWin(array<array<int, 19>, 19> &board, int tile, int wCaps, int bCaps) {
-    int opponent = tile == 1 ? 2 : 1;
+	int opponent = tile == 1 ? 2 : 1;
 
 	// Heuristics values
 	const long long int WON = infi;
@@ -487,7 +487,7 @@ long long int needToWin(array<array<int, 19>, 19> &board, int tile, int wCaps, i
 		} else {
 			if (countO == 4 && countA == 1) block4++;
 			if (countO == 3 && countA == 1) block3++;
-                }
+		}
 	};
 
 	// Function to process a line (row, column, diagonal, anti-diagonal)
@@ -496,9 +496,9 @@ long long int needToWin(array<array<int, 19>, 19> &board, int tile, int wCaps, i
 		for (auto it = begin; it != end; ++it) {
 			if (*it == tile) countA++;
 			else if (*it == opponent) countO++;
-            
+
 			if (N < 5) N++;
-            else {
+			else {
 				if (*(it - 5) == tile) countA--;
 				else if (*(it - 5) == opponent) countO--;
 
@@ -536,9 +536,9 @@ long long int needToWin(array<array<int, 19>, 19> &board, int tile, int wCaps, i
 	long long int score = won * WON + win1 * WIN1 + win2 * WIN2 + win3 * WIN3 + win4 * WIN4 + lost * LOST + loose1 * LOOSE1 + loose2 * LOOSE2 + loose3 * LOOSE3 + block4 * BLOCK4 + block3 * BLOCK3;
 	long long int captureScore = (wCaps - bCaps) * CAPTURE;
 	if (tile == 2) score += captureScore;
-    else score -= captureScore;
+	else score -= captureScore;
 
-    return score;
+	return score;
 }
 
 // TODO =====================================================================================================
@@ -683,7 +683,7 @@ public:
 
 // Capture Functions
 pair<int, uint64_t> checkCaptures(array<array<int, 19>, 19> &currBoard, int row, int col, int color, ZobristHash &hasher) {
-	int opponent = (color == 1) ? 2 : 1; // determine the opponent's color
+    int opponent = (color == 1) ? 2 : 1; // determine the opponent's color
     int numCaptures = 0;
 
     // Utility lambda to handle capture and update board and hasher
@@ -716,7 +716,7 @@ pair<int, uint64_t> checkCaptures(array<array<int, 19>, 19> &currBoard, int row,
             handleCapture(r2, c2);
         }
     }
-    
+
     return make_pair(numCaptures, hasher.hash());
 }
 
@@ -846,51 +846,57 @@ vector<pii> getChildren(array<array<int, 19>, 19> &currBoard)
 
 
 // MOVE ORDERING
-priority_queue <pair<long long int, pii> > moveOrderingMax(vector<pii> &children, array<array<int, 19>, 19> &board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
-{
-	priority_queue <pair<long long int, pii> > moveOrderMax;
+priority_queue<pair<long long int, pii>> moveOrderingMax(vector<pii> &children, array<array<int, 19>, 19> &board, int agentTile, bool isMaximizing, int &wCaps, int &bCaps, ZobristHash &zobrist) {
+    priority_queue<pair<long long int, pii>> moveOrderMax;
     int opponentTile = agentTile == 1 ? 2 : 1;
     emscripten_console_log(("Num Child: " + to_string(children.size())).c_str());
-	for (size_t i = 0; i < children.size(); i++)
-	{
-        emscripten_console_log(("Child: " + to_string(children[i].first) + " " + to_string(children[i].second)).c_str());
-		array<array<int, 19>, 19> currBoard = board;
-		int numCaptures;
-		long long int heuristic;
-		
-		uint64_t oldHash = zobrist.hash(); // get old hash
-		currBoard[children[i].first][children[i].second] = agentTile;
-		zobrist.updateHash(children[i].first, children[i].second, agentTile); // update hash
-		uint64_t newHash;
-		pair<int, uint64_t> temp;
 
-		tie(currBoard, temp) = checkCaptures(currBoard, children[i].first, children[i].second, agentTile, zobrist);
-		tie(numCaptures, newHash) = temp;
+    for (const auto &child : children) {
+        emscripten_console_log(("Child: " + to_string(child.first) + " " + to_string(child.second)).c_str());
 
-		agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
-		// zobrist.updateHash(newHash); // update hash
+        int numCaptures;
+        long long int heuristic;
 
-		if(oldTranspositionTable[newHash] == 0) {
-			heuristic = evaluateBoard(currBoard, isMaximizing, agentTile, wCaps, bCaps); // Heuristic
-			newTranspositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
-			oldTranspositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
-			// transpositionTable2[newHash] = make_pair(heuristic == 0 ? 1 : heuristic, children[i]);
-			// missCount++; // DEBUG
-		}
-		else {
-			heuristic = oldTranspositionTable[newHash];
-            newTranspositionTable[newHash] = oldTranspositionTable[newHash];
+        uint64_t oldHash = zobrist.hash(); // get old hash
+        int oldTile = board[child.first][child.second];
+        board[child.first][child.second] = agentTile;
+        zobrist.updateHash(child.first, child.second, agentTile); // update hash
+
+        // Use the original board for capture checking and revert changes later
+        tie(numCaptures, oldHash) = checkCaptures(board, child.first, child.second, agentTile, zobrist);
+
+        if (agentTile == 1) {
+            bCaps += numCaptures;
+        } else {
+            wCaps += numCaptures;
         }
-		// cout<<children[i].first<<" "<<children[i].second<<" "<<heuristic<<endl; // DEBUG
-		
-		moveOrderMax.push(make_pair(heuristic, children[i]));
 
-		agentTile == 1 ? bCaps -= numCaptures : wCaps -= numCaptures;
-		zobrist.updateHash(oldHash); // update hash
-	}
-	// cout<<missCount<<"\t"<<(double)missCount/(double)children.size()<<endl; // DEBUG
+
+				heuristic = evaluateBoard(board, isMaximizing, agentTile, wCaps, bCaps); // Heuristic
+
+        // if (oldTranspositionTable[oldHash] == 0) {
+				//     heuristic = evaluateBoard(board, isMaximizing, agentTile, wCaps, bCaps); // Heuristic
+        //     newTranspositionTable[oldHash] = heuristic == 0 ? 1 : heuristic;
+        //     oldTranspositionTable[oldHash] = heuristic == 0 ? 1 : heuristic;
+        // } else {
+        //     heuristic = oldTranspositionTable[oldHash];
+        //     newTranspositionTable[oldHash] = oldTranspositionTable[oldHash];
+        // }
+
+        moveOrderMax.push(make_pair(heuristic, child));
+
+        if (agentTile == 1) {
+            bCaps -= numCaptures;
+        } else {
+            wCaps -= numCaptures;
+        }
+
+        board[child.first][child.second] = oldTile; // revert move
+        zobrist.updateHash(oldHash); // revert hash
+    }
+
     emscripten_console_log(("Num Child: " + to_string(moveOrderMax.size())).c_str());
-	return moveOrderMax;
+    return moveOrderMax;
 }
 
 priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderingMin(vector<pii> children, array<array<int, 19>, 19> board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
@@ -943,9 +949,9 @@ long long int alphaBeta(array<array<int, 19>, 19> currBoard, int wCaps, int bCap
 
     if (depth == 0) {
 		// if(oldTranspositionTable[hasher.hash()] == 0) {
-	    	long long int value = evaluateBoard(currBoard, isMaximizing, isMaximizing ? agentTile : opponentTile , wCaps, bCaps);
+			long long int value = evaluateBoard(currBoard, isMaximizing, isMaximizing ? agentTile : opponentTile , wCaps, bCaps);
             // newTranspositionTable[hasher.hash()] = value == 0 ? 1 : value;
-            return value;
+			return value;
         // }
 		// newTranspositionTable[hasher.hash()] = oldTranspositionTable[hasher.hash()];
 		// return oldTranspositionTable[hasher.hash()];
