@@ -16,6 +16,7 @@
 
 using namespace std;
 
+#define BOARD_SIZE 19
 #define infi 10000000000000
 #define ninfi -10000000000000
 #define pii pair<int, int>
@@ -32,11 +33,11 @@ unordered_map <uint64_t, long long int > newTranspositionTable;
 class ZobristHash
 {
 private:
-    vector<vector<vector<uint64_t> > > hashTable;
+    uint64_t hashTable[BOARD_SIZE][BOARD_SIZE][3];
     int SEED;
     uint64_t boardHash;
 public:
-    ZobristHash(vector<vector<int> > board);
+    ZobristHash(array<array<int, 19>, 19> &board);
     ~ZobristHash();
     uint64_t rand_uint64();
     void updateHash(int row, int col, int tile);
@@ -45,8 +46,7 @@ public:
     uint64_t hash();
 };
 
-ZobristHash::ZobristHash(vector<vector<int> > board) {
-    hashTable = vector<vector<vector<uint64_t> > >(19, vector<vector<uint64_t> >(19, vector<uint64_t>(3)));
+ZobristHash::ZobristHash(array<array<int, 19>, 19> &board) {
     boardHash = 0;
     SEED = 123456789;
 
@@ -71,7 +71,7 @@ ZobristHash::ZobristHash(vector<vector<int> > board) {
 }
 
 ZobristHash::~ZobristHash() {
-// delete hash table
+    // clear hashTable memory
 }
 
 uint64_t ZobristHash::rand_uint64() {
@@ -97,7 +97,7 @@ uint64_t ZobristHash::hash() {
 class slidingHeuristic
 {
 private:
-    vector<vector<int> > board;
+    array<array<int, 19>, 19> board;
     int tile;
     int whiteCaptures;
     int blackCaptures;
@@ -111,7 +111,7 @@ private:
     unordered_map<int, long long int> heuristicWindow5B;
 
 public:
-    slidingHeuristic(vector<vector<int> > board, int tile, int whiteCaptures, int blackCaptures);
+    slidingHeuristic(array<array<int, 19>, 19> board, int tile, int whiteCaptures, int blackCaptures);
     // ~slidingHeuristic();
     void initializeHeuristicMaps();
     vector<long long int> hashWindow4(int i, int j);
@@ -122,7 +122,7 @@ public:
     int slidingWindowHeuristicPartial(vector<pair<int, int> >range);
 };
 
-slidingHeuristic::slidingHeuristic(vector<vector<int> > board, int tile, int whiteCaptures, int blackCaptures)
+slidingHeuristic::slidingHeuristic(array<array<int, 19>, 19> board, int tile, int whiteCaptures, int blackCaptures)
 {
     this->board = board;
     this->tile = tile;
@@ -447,7 +447,7 @@ int slidingHeuristic::slidingWindowHeuristicPartial(vector<pii>range)
 }
 
 
-long long int needToWin(vector<vector<int> > board, int tile, int wCaps, int bCaps)
+long long int needToWin(array<array<int, 19>, 19> board, int tile, int wCaps, int bCaps)
 {
     int opponent = tile == 1 ? 2 : 1;
 
@@ -688,7 +688,7 @@ long long int needToWin(vector<vector<int> > board, int tile, int wCaps, int bCa
 //     openingMoves[10367220700633438709] = "9G"; // K7
 // }
 
-string getOpeningMove(int nTurn, int agentTile, uint64_t hash, vector <vector <int> > board)
+string getOpeningMove(int nTurn, int agentTile, uint64_t hash, array<array<int, 19>, 19> &board)
 {
     unordered_map <uint64_t, string > openingMoves;
     openingMoves[9101533770646912702] = "10K"; // opening white
@@ -712,6 +712,8 @@ string getOpeningMove(int nTurn, int agentTile, uint64_t hash, vector <vector <i
     // white second move
     // cout<<"hash: "<<hash<<endl;
     if(openingMoves[hash] != "") return openingMoves[hash];
+    openingMoves.clear();
+
     if(nTurn == 2 && agentTile == 2) {
         int blackI = -1, blackJ = -1;
         for (int i = 0; i < 19; i++) {
@@ -784,7 +786,7 @@ string getOpeningMove(int nTurn, int agentTile, uint64_t hash, vector <vector <i
     return "";
 }
 
-long long int evaluateBoard(vector<vector<int> > currBoard, bool isMaximizing, int tile, int whiteCaptures=0, int blackCapture=0)
+long long int evaluateBoard(array<array<int, 19>, 19> currBoard, bool isMaximizing, int tile, int whiteCaptures=0, int blackCapture=0)
 {
     // int heuristic = centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
     // return isMaximizing ? heuristic : -heuristic;
@@ -807,7 +809,7 @@ public:
 };
 
 // Capture Functions
-pair<vector<vector<int> >, pair<int, uint64_t> > checkCaptures(vector<vector<int> > currBoard, int row, int col, int color, ZobristHash hasher)
+pair<array<array<int, 19>, 19>, pair<int, uint64_t> > checkCaptures(array<array<int, 19>, 19> currBoard, int row, int col, int color, ZobristHash hasher)
 {
 	int opponent = (color == 1) ? 2 : 1; // determine the opponent's color
     int numCaptures = 0;
@@ -886,7 +888,7 @@ pair<vector<vector<int> >, pair<int, uint64_t> > checkCaptures(vector<vector<int
 }
 
 // Check Win Function
-bool checkWin(vector<vector<int> > currBoard, int wCaps, int bCaps, int color, int row, int col)
+bool checkWin(array<array<int, 19>, 19> currBoard, int wCaps, int bCaps, int color, int row, int col)
 {
 
 	// check for capture wins
@@ -970,7 +972,7 @@ bool checkWin(vector<vector<int> > currBoard, int wCaps, int bCaps, int color, i
 }
 
 // Get Child Board positions
-pair<vector<pii>, vector<pii> > getChildren(vector<vector<int> > currBoard)
+vector<pii> getChildren(array<array<int, 19>, 19> &currBoard)
 {
 	// int R = 4;
 	int R = 2;
@@ -1006,12 +1008,12 @@ pair<vector<pii>, vector<pii> > getChildren(vector<vector<int> > currBoard)
         }
     }
 
-    return make_pair(children, range);
+    return children;
 }
 
 
 // MOVE ORDERING
-priority_queue <pair<long long int, pii> > moveOrderingMax(vector<pii> &children, vector<vector<int> > &board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist, vector<pii>&range)
+priority_queue <pair<long long int, pii> > moveOrderingMax(vector<pii> &children, array<array<int, 19>, 19> &board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
 {
 	priority_queue <pair<long long int, pii> > moveOrderMax;
     int opponentTile = agentTile == 1 ? 2 : 1;
@@ -1019,7 +1021,7 @@ priority_queue <pair<long long int, pii> > moveOrderingMax(vector<pii> &children
 	for (size_t i = 0; i < children.size(); i++)
 	{
         emscripten_console_log(("Child: " + to_string(children[i].first) + " " + to_string(children[i].second)).c_str());
-		vector<vector<int> > currBoard = board;
+		array<array<int, 19>, 19> currBoard = board;
 		int numCaptures;
 		long long int heuristic;
 		
@@ -1058,14 +1060,14 @@ priority_queue <pair<long long int, pii> > moveOrderingMax(vector<pii> &children
 	return moveOrderMax;
 }
 
-priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderingMin(vector<pii> children, vector<vector<int> > board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
+priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderingMin(vector<pii> children, array<array<int, 19>, 19> board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash zobrist)
 {
 	priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderMin;
 	int opponentTile = agentTile == 1 ? 2 : 1;
  
 	for (size_t i = 0; i < children.size(); i++)
 	{
-		vector<vector<int> > currBoard = board;
+		array<array<int, 19>, 19> currBoard = board;
 		int numCaptures;
 		long long int heuristic;
 		
@@ -1102,7 +1104,7 @@ priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Com
 }
 
 // ALPHA BETA
-long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher, float ForwardPruningPercentage, long long int FractionalPruning)
+long long int alphaBeta(array<array<int, 19>, 19> currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash hasher, float ForwardPruningPercentage, long long int FractionalPruning)
 {
     int opponentTile = agentTile == 1 ? 2 : 1;
 
@@ -1118,7 +1120,7 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 	
 	vector<pii> children(0);
 	vector<pii> range(0);
-	tie(children, range) = getChildren(currBoard);
+	children = getChildren(currBoard);
 	int numChildren = children.size();
 	int fwdPruningChildren = numChildren*ForwardPruningPercentage;
 
@@ -1128,7 +1130,7 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 		// cout << children.size() << endl; // DEBUG
 
 		// ?MOVE ORDERING
-		priority_queue <pair<long long int, pii> > moveOrderMax = moveOrderingMax(children, currBoard, agentTile, isMaximizing, wCaps, bCaps, hasher, range);
+		priority_queue <pair<long long int, pii> > moveOrderMax = moveOrderingMax(children, currBoard, agentTile, isMaximizing, wCaps, bCaps, hasher);
 		
 		long long int maxHeuristic = moveOrderMax.top().first;
 
@@ -1145,7 +1147,7 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 				break;
 
             currBoard[child.first][child.second] = agentTile;
-			vector<vector<int> > newBoard = currBoard;
+			array<array<int, 19>, 19> newBoard = currBoard;
 			int numCaptures;
 			
 			uint64_t oldHash = hasher.hash(); // get old hash
@@ -1198,7 +1200,7 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 			if(minHeuristic<0 && heuristic > minHeuristic/FractionalPruning)
 				break;
 
-			vector<vector<int> > newBoard = currBoard;
+			array<array<int, 19>, 19> newBoard = currBoard;
             newBoard[child.first][child.second] = opponentTile;
 			int numCaptures;
 			
@@ -1234,7 +1236,7 @@ long long int alphaBeta(vector<vector<int> > currBoard, int wCaps, int bCaps, in
 // TODO =====================================================================================================
 // TODO: HELPERS
 // print 2d vector
-void printBoard(vector<vector<int> > board)
+void printBoard(array<array<int, 19>, 19> board)
 {
     // for (size_t i = 0; i < board.size(); i++)
     // {
@@ -1249,7 +1251,7 @@ void printBoard(vector<vector<int> > board)
 
 // print 2d vector emscripten
 extern "C" EMSCRIPTEN_KEEPALIVE
-void printBoardEM(vector<vector<int> > board)
+void printBoardEM(array<array<int, 19>, 19> &board)
 {
     string boardStr = "";
     for (size_t i = 0; i < board.size(); i++)
@@ -1325,7 +1327,7 @@ long long int FractionalPruning;
 extern "C" EMSCRIPTEN_KEEPALIVE
 int getNextMove(int* boardArray, int whiteCaptures, int blackCaptures, double time, int agentTile, int nTurns)
 {
-    vector<vector<int>> board(19, vector<int>(19, 0));
+    array <array <int, 19>, 19> board;
 
     emscripten_console_log((
         "Agent Tile\t: " + to_string(agentTile) +
@@ -1363,13 +1365,12 @@ int getNextMove(int* boardArray, int whiteCaptures, int blackCaptures, double ti
 
 
     vector<pii> children(0);
-    vector<pii> range(0);
     priority_queue<pair<long long int, pii> > moveOrder;
-	tie(children, range) = getChildren(board);
+	children = getChildren(board);
     // cout << children.size() << endl; // DEBUG
     emscripten_console_log("Number Children:");
 
-    moveOrder = moveOrderingMax(children, board, agentTile, true, whiteCaptures, blackCaptures, zobristHash, range);
+    moveOrder = moveOrderingMax(children, board, agentTile, true, whiteCaptures, blackCaptures, zobristHash);
     int numChildren = children.size();
     emscripten_console_log(("Number Children:" + to_string(numChildren)).c_str());
     long long int maxHeuristic = moveOrder.top().first;
@@ -1405,7 +1406,7 @@ int getNextMove(int* boardArray, int whiteCaptures, int blackCaptures, double ti
         if(maxHeuristic > 0 && heuristic < maxHeuristic/FractionalPruning)
             break;
 
-        vector<vector<int> > currBoard = board;
+        array<array<int, 19>, 19> currBoard = board;
         currBoard[child.first][child.second] = agentTile;
         int numCaps;
 
