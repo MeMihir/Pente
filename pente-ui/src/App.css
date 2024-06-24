@@ -1,0 +1,126 @@
+/* src/App.css */
+.App {
+  text-align: center;
+  padding: 5rem 10rem;
+}
+
+/* BOARD */
+.board-container {
+  display: inline-block;
+  margin-right: 20px;
+  background-color: #f0d9b5;
+}
+
+.board-row {
+  display: flex;
+}
+
+/* SQUARE */
+.square {
+  width: 30px;
+  height: 30px;
+  background-color: #f0d9b5;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 0;
+  overflow: visible;
+  position: relative;
+  border-radius: 100%;
+  color: #000;
+}
+
+.square.X {
+  background-color: #000;
+}
+
+.square.O {
+  background-color: #fff;
+}
+
+/* SQUARE PLUS */
+.square.plus::before, .square.plus::after {
+  content: "";
+  position: absolute;
+  background-color: #000;
+}
+
+.square.plus::before {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.square.plus::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+}
+
+/* SQUARE HOVER */
+.square:hover {
+  background-color: #ddd;
+}
+
+.square.X:hover {
+  background-color: #000;
+}
+
+.square.O:hover {
+  background-color: #fff;
+}
+
+.game-container {
+  display: flex;
+}
+
+.game-info {
+  display: inline-block;
+  text-align: left;
+}
+
+button {
+  margin: 5px;
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+/* MOVES TABLE */
+
+.moves-table {
+  margin-top: 20px;
+  height: 25rem;
+  overflow: scroll;
+}
+
+.moves-table table {
+  width: 100%;
+  border-collapse: collapse;
+
+}
+
+.moves-table th,
+.moves-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.moves-table th {
+  background-color: #f2f2f2;
+}
+
+.moves-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.moves-table tr:hover {
+  background-color: #ddd;
+}
