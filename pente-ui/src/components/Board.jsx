@@ -55,6 +55,58 @@ const Board = ({ onMove, numMoves }) => {
     return captures;
   }
 
+  const checkWin = (move, player, squares) => {
+    if (player === 1 && blackCapture >= 10) {
+      return true;
+    }
+    if (player === 2 && whiteCapture >= 10) {
+      return true;
+    }
+
+    if (numMoves?.length === BOARD_SIZE * BOARD_SIZE) {
+      return true;
+    }
+
+    // 5 in a row / column / diagonal
+    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1]];
+    const x = move % BOARD_SIZE;
+    const y = Math.floor(move / BOARD_SIZE);
+
+    for (let [dx, dy] of directions) {
+      let count = 1;
+      let nx = x + dx;
+      let ny = y + dy;
+      while (
+        nx >= 0 &&
+        nx < BOARD_SIZE &&
+        ny >= 0 &&
+        ny < BOARD_SIZE &&
+        squares[ny * BOARD_SIZE + nx] === player
+      ) {
+        count++;
+        nx += dx;
+        ny += dy;
+      }
+      nx = x - dx;
+      ny = y - dy;
+      while (
+        nx >= 0 &&
+        nx < BOARD_SIZE &&
+        ny >= 0 &&
+        ny < BOARD_SIZE &&
+        squares[ny * BOARD_SIZE + nx] === player
+      ) {
+        count++;
+        nx -= dx;
+        ny -= dy;
+      }
+      if (count >= 5) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   const handleMove = (move, player, squares) => {
     const coord = move2coord(move);
     onMove({ position: `${coord[0]}${coord[1]}`, player });
@@ -71,6 +123,11 @@ const Board = ({ onMove, numMoves }) => {
       });
       setSquares(squares);
     }
+
+    if (checkWin(move, player, squares)) {
+      alert(`Player ${player === 1 ? "O" : "X"} wins!`);
+    }
+
     return squares;
   }
 
