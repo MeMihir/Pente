@@ -9,7 +9,7 @@ export const randomEngine = (squares) => {
 };
 
 export const loadWasm = async () => {
-  const wasmMemory = new WebAssembly.Memory({ initial: 1024, maximum: 65537 });
+  const wasmMemory = new WebAssembly.Memory({ initial: 1024, maximum: 65536 });
   const wasmTable = new WebAssembly.Table({ initial: 0, element: "anyfunc" });
 
   const wasmImports = {
