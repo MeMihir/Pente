@@ -809,82 +809,42 @@ public:
 };
 
 // Capture Functions
-pair<array<array<int, 19>, 19>, pair<int, uint64_t> > checkCaptures(array<array<int, 19>, 19> currBoard, int row, int col, int color, ZobristHash hasher)
-{
+pair<int, uint64_t> checkCaptures(array<array<int, 19>, 19> &currBoard, int row, int col, int color, ZobristHash &hasher) {
 	int opponent = (color == 1) ? 2 : 1; // determine the opponent's color
     int numCaptures = 0;
 
-	// check for captures horizontally
-	if (col > 2 && currBoard[row][col - 1] == opponent && currBoard[row][col - 2] == opponent && currBoard[row][col - 3] == color)
-	{
-		currBoard[row][col - 1] = 0;
-		currBoard[row][col - 2] = 0;
-		hasher.updateHash(row, col - 1, 0);
-		hasher.updateHash(row, col - 2, 0);
+    // Utility lambda to handle capture and update board and hasher
+    auto handleCapture = [&](int r, int c) {
+        currBoard[r][c] = 0;
+        hasher.updateHash(r, c, 0);
         numCaptures++;
-	}
-	if (col < 16 && currBoard[row][col + 1] == opponent && currBoard[row][col + 2] == opponent && currBoard[row][col + 3] == color)
-	{
-		currBoard[row][col + 1] = 0;
-		currBoard[row][col + 2] = 0;
-		hasher.updateHash(row, col + 1, 0);
-		hasher.updateHash(row, col + 2, 0);
-        numCaptures++;
-	}
+    };
 
-	// check for captures vertically
-	if (row > 2 && currBoard[row - 1][col] == opponent && currBoard[row - 2][col] == opponent && currBoard[row - 3][col] == color)
-	{
-		currBoard[row - 1][col] = 0;
-		currBoard[row - 2][col] = 0;
-		hasher.updateHash(row - 1, col, 0);
-		hasher.updateHash(row - 2, col, 0);
-        numCaptures++;
-	}
-	if (row < 16 && currBoard[row + 1][col] == opponent && currBoard[row + 2][col] == opponent && currBoard[row + 3][col] == color)
-	{
-		currBoard[row + 1][col] = 0;
-		currBoard[row + 2][col] = 0;
-		hasher.updateHash(row + 1, col, 0);
-		hasher.updateHash(row + 2, col, 0);
-        numCaptures++;
-	}
+    // Check for captures in all directions
+    struct Direction {
+        int dr, dc;
+    };
 
-	// check for captures diagonally
-	if (row > 2 && col > 2 && currBoard[row - 1][col - 1] == opponent && currBoard[row - 2][col - 2] == opponent && currBoard[row - 3][col - 3] == color)
-	{
-		currBoard[row - 1][col - 1] = 0;
-		currBoard[row - 2][col - 2] = 0;
-		hasher.updateHash(row - 1, col - 1, 0);
-		hasher.updateHash(row - 2, col - 2, 0);
-        numCaptures++;
-	}
-	if (row < 16 && col < 16 && currBoard[row + 1][col + 1] == opponent && currBoard[row + 2][col + 2] == opponent && currBoard[row + 3][col + 3] == color)
-	{
-		currBoard[row + 1][col + 1] = 0;
-		currBoard[row + 2][col + 2] = 0;
-		hasher.updateHash(row + 1, col + 1, 0);
-		hasher.updateHash(row + 2, col + 2, 0);
-        numCaptures++;
-	}
-	if (row > 2 && col < 16 && currBoard[row - 1][col + 1] == opponent && currBoard[row - 2][col + 2] == opponent && currBoard[row - 3][col + 3] == color)
-	{
-		currBoard[row - 1][col + 1] = 0;
-		currBoard[row - 2][col + 2] = 0;
-		hasher.updateHash(row - 1, col + 1, 0);
-		hasher.updateHash(row - 2, col + 2, 0);
-        numCaptures++;
-	}
-	if (row < 16 && col > 2 && currBoard[row + 1][col - 1] == opponent && currBoard[row + 2][col - 2] == opponent && currBoard[row + 3][col - 3] == color)
-	{
-		currBoard[row + 2][col - 2] = 0;
-		currBoard[row + 3][col - 3] = 0;
-		hasher.updateHash(row + 1, col - 1, 0);
-		hasher.updateHash(row + 2, col - 2, 0);
-        numCaptures++;
-	}
+    Direction directions[] = {
+        {0, -1}, {0, 1}, {-1, 0}, {1, 0}, // Horizontal and vertical
+        {-1, -1}, {1, 1}, {-1, 1}, {1, -1} // Diagonal
+    };
+
+    for (const auto &dir : directions) {
+        int r1 = row + dir.dr, c1 = col + dir.dc;
+        int r2 = row + 2 * dir.dr, c2 = col + 2 * dir.dc;
+        int r3 = row + 3 * dir.dr, c3 = col + 3 * dir.dc;
+        
+        if (r1 >= 0 && r1 < 19 && c1 >= 0 && c1 < 19 &&
+            r2 >= 0 && r2 < 19 && c2 >= 0 && c2 < 19 &&
+            r3 >= 0 && r3 < 19 && c3 >= 0 && c3 < 19 &&
+            currBoard[r1][c1] == opponent && currBoard[r2][c2] == opponent && currBoard[r3][c3] == color) {
+            handleCapture(r1, c1);
+            handleCapture(r2, c2);
+        }
+    }
     
-    return make_pair(currBoard, make_pair(numCaptures, hasher.hash()));
+    return make_pair(numCaptures, hasher.hash());
 }
 
 // Check Win Function
