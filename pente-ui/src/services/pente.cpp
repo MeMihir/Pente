@@ -447,222 +447,95 @@ int slidingHeuristic::slidingWindowHeuristicPartial(vector<pii>range)
 }
 
 
-long long int needToWin(array<array<int, 19>, 19> board, int tile, int wCaps, int bCaps)
-{
+long long int needToWin(array<array<int, 19>, 19> &board, int tile, int wCaps, int bCaps) {
     int opponent = tile == 1 ? 2 : 1;
 
-    int won = 0;
-    int lost = 0;
-    int win1 = 0;
-    int loose1 = 0;
-    int win2 = 0;
-    int loose2 = 0;
-    int win3 = 0;
-    int loose3 = 0;
-    int win4 = 0;
-    int block4 = 0;
-    int block3 = 0;
+	// Heuristics values
+	const long long int WON = infi;
+	const long long int LOST = -infi;
+	const long long int WIN1 = 100000000000;
+	const long long int LOOSE1 = -10000000000;
+	const long long int WIN2 = 100000000;
+	const long long int LOOSE2 = -10000000;
+	const long long int WIN3 = 100000;
+	const long long int LOOSE3 = -10000;
+	const long long int WIN4 = 100;
+	const long long int CAPTURE = 1000000000;
+	const long long int BLOCK4 = 1000000000000;
+	const long long int BLOCK3 = 1000000000;
 
-    // Heuristics
-    long long int WON = infi;
-    long long int LOST = -infi;
-    long long int WIN1 = 100000000000;
-    long long int LOOSE1 = -10000000000;
-    long long int WIN2 = 100000000;
-    long long int LOOSE2 = -10000000;
-    long long int WIN3 = 100000;
-    long long int LOOSE3 = -10000;
-    long long int WIN4 = 100;
-    long long int CAPTURE = 1000000000;
-    long long int BLOCK4 = 1000000000000;
-    long long int BLOCK3 = 1000000000;
+	// Counters
+	int won = 0, lost = 0, win1 = 0, loose1 = 0, win2 = 0, loose2 = 0, win3 = 0, loose3 = 0, win4 = 0, block4 = 0, block3 = 0;
 
+	// Helper lambda to count patterns in lines
+	auto countPatterns = [&](int countA, int countO) {
+		if (countO == 0) {
+			switch (countA) {
+				case 5: won++; break;
+				case 4: win1++; break;
+				case 3: win2++; break;
+				case 2: win3++; break;
+				case 1: win4++; break;
+			}
+		} else if (countA == 0) {
+			switch (countO) {
+				case 5: lost++; break;
+				case 4: loose1++; break;
+				case 3: loose2++; break;
+				case 2: loose3++; break;
+			}
+		} else {
+			if (countO == 4 && countA == 1) block4++;
+			if (countO == 3 && countA == 1) block3++;
+                }
+	};
 
-    // Horizontal
-    for (int i = 0; i < 19; i++)
-    {
-        int countA = 0;
-        int countO = 0;
-        int N = 0;
-        for (int j = 0 ; j < 19; j++)
-        {
-            if(board[i][j] == tile)
-                countA++;
-            else if(board[i][j] == opponent)
-                countO++;
+	// Function to process a line (row, column, diagonal, anti-diagonal)
+	auto processLine = [&](auto begin, auto end) {
+		int countA = 0, countO = 0, N = 0;
+		for (auto it = begin; it != end; ++it) {
+			if (*it == tile) countA++;
+			else if (*it == opponent) countO++;
             
-            if(N<5) N++;
+			if (N < 5) N++;
             else {
-                if(board[i][j-N] == tile)
-                    countA--;
-                else if(board[i][j-N] == opponent)
-                    countO--;
-                
+				if (*(it - 5) == tile) countA--;
+				else if (*(it - 5) == opponent) countO--;
 
-                if(countO == 0) {
-                    if(countA == 5) won++;
-                    else if(countA == 4) win1++;
-                    else if(countA == 3) win2++;
-                    else if(countA == 2) win3++;
-                    else if(countA == 1) win4++;
-                }
-                else if(countA == 0) {
-                    if(countO == 5) lost++;
-                    else if(countO == 4) loose1++;
-                    else if(countO == 3) loose2++;
-                    else if(countO == 2) loose3++;
-                }
-                else {
-                    if(countO == 4 && countA == 1) block4++;
-                    else if(countO == 3 && countA == 1) block3++;
-                }
-            }
-        }
-        N=0;
-        countA = 0;
-        countO = 0;
-    }
+				countPatterns(countA, countO);
+			}
+		}
+	};
 
-    // Vertical
-    for (int i = 0; i < 19; i++)
-    {
-        int countA = 0;
-        int countO = 0;
-        int N = 0;
-        for (int j = 0 ; j < 19; j++)
-        {
-            if(board[j][i] == tile)
-                countA++;
-            else if(board[j][i] == opponent)
-                countO++;
-            
-            if(N<5) N++;
-            else {
-                if(board[j-N][i] == tile)
-                    countA--;
-                else if(board[j-N][i] == opponent)
-                    countO--;
-                
+	// Process rows
+	for (int i = 0; i < 19; ++i) {
+		processLine(board[i].begin(), board[i].end());
+	}
 
-                if(countO == 0) {
-                    if(countA == 5) won++;
-                    else if(countA == 4) win1++;
-                    else if(countA == 3) win2++;
-                    else if(countA == 2) win3++;
-                    else if(countA == 1) win4++;
-                }
-                else if(countA == 0) {
-                    if(countO == 5) lost++;
-                    else if(countO == 4) loose1++;
-                    else if(countO == 3) loose2++;
-                    else if(countO == 2) loose3++;
-                }
-                else {
-                    if(countO == 4 && countA == 1) block4++;
-                    else if(countO == 3 && countA == 1) block3++;
-                }
-            }
-        }
-        N = 0;
-        countA = 0;
-        countO = 0;
-    }
+	// Process columns
+	for (int j = 0; j < 19; ++j) {
+		vector<int> col(19);
+		for (int i = 0; i < 19; ++i) {
+				col[i] = board[i][j];
+		}
+		processLine(col.begin(), col.end());
+	}
 
-    // Diagonal
-    for (int k = 0; k < 19 + 19 - 1; k++) {
-        int countA = 0;
-        int countO = 0;
-        int N = 0;
-        for (int i = 0; i < 19; i++) {
-            int j = k - i;
-            if (j >= 0 && j < 19) {
-                if(board[i][j] == tile)
-                    countA++;
-                else if(board[i][j] == opponent)
-                    countO++;
-                
-                if(N<5) N++;
-                else {
-                    if(board[i-N][j+N] == tile)
-                        countA--;
-                    else if(board[i-N][j+N] == opponent)
-                        countO--;
-                    
+	// Process diagonals
+	for (int k = 0; k < 19 + 19 - 1; ++k) {
+		vector<int> diag1, diag2;
+		for (int i = 0; i < 19; ++i) {
+			int j1 = k - i, j2 = k - (19 - i - 1);
+			if (j1 >= 0 && j1 < 19) diag1.push_back(board[i][j1]);
+			if (j2 >= 0 && j2 < 19) diag2.push_back(board[i][j2]);
+		}
+		processLine(diag1.begin(), diag1.end());
+		processLine(diag2.begin(), diag2.end());
+	}
 
-                    if(countO == 0) {
-                        if(countA == 5) won++;
-                        else if(countA == 4) win1++;
-                        else if(countA == 3) win2++;
-                        else if(countA == 2) win3++;
-                        else if(countA == 1) win4++;
-                    }
-                    else if(countA == 0) {
-                        if(countO == 5) lost++;
-                        else if(countO == 4) loose1++;
-                        else if(countO == 3) loose2++;
-                        else if(countO == 2) loose3++;
-                    }
-                    else {
-                        if(countO == 4 && countA == 1) block4++;
-                        else if(countO == 3 && countA == 1) block3++;
-                    }
-                }
-            }
-        }
-        countA = 0;
-        countO = 0;
-        N=0;
-    }
-
-    // Anti-Diagonal
-    for (int k = 0; k < 19 + 19 - 1; k++) {
-        int countA = 0;
-        int countO = 0;
-        int N = 0;
-        for (int i = 0; i < 19; i++) {
-            int j = k - (19 - i - 1);
-            if (j >= 0 && j < 19) {
-                if(board[i][j] == tile)
-                    countA++;
-                else if(board[i][j] == opponent)
-                    countO++;
-                
-                if(N<5) N++;
-                else {
-                    if(board[i-N][j-N] == tile)
-                        countA--;
-                    else if(board[i-N][j-N] == opponent)
-                        countO--;
-                    
-
-                    if(countO == 0) {
-                        if(countA == 5) won++;
-                        else if(countA == 4) win1++;
-                        else if(countA == 3) win2++;
-                        else if(countA == 2) win3++;
-                        else if(countA == 1) win4++;
-                    }
-                    else if(countA == 0) {
-                        if(countO == 5) lost++;
-                        else if(countO == 4) loose1++;
-                        else if(countO == 3) loose2++;
-                        else if(countO == 2) loose3++;
-                    }
-                    else {
-                        if(countO == 4 && countA == 1) block4++;
-                        else if(countO == 3 && countA == 1) block3++;
-                    }
-                }
-            }
-        }
-        countA = 0;
-        countO = 0;
-        N=0;
-    }
-
-    long long int score = won*WON + win1*WIN1 + win2*WIN2 + win3*WIN3 + win4*WIN4 + lost*LOST + loose1*LOOSE1 + loose2*LOOSE2 + loose3*LOOSE3 + block4*BLOCK4 + block3*BLOCK3;
-    long long int captureScore = (wCaps - bCaps)*CAPTURE;
-    if(tile == 2) score += captureScore;
+	long long int score = won * WON + win1 * WIN1 + win2 * WIN2 + win3 * WIN3 + win4 * WIN4 + lost * LOST + loose1 * LOOSE1 + loose2 * LOOSE2 + loose3 * LOOSE3 + block4 * BLOCK4 + block3 * BLOCK3;
+	long long int captureScore = (wCaps - bCaps) * CAPTURE;
+	if (tile == 2) score += captureScore;
     else score -= captureScore;
 
     return score;
@@ -786,7 +659,7 @@ string getOpeningMove(int nTurn, int agentTile, uint64_t hash, array<array<int, 
     return "";
 }
 
-long long int evaluateBoard(array<array<int, 19>, 19> currBoard, bool isMaximizing, int tile, int whiteCaptures=0, int blackCapture=0)
+long long int evaluateBoard(array<array<int, 19>, 19> &currBoard, bool isMaximizing, int tile, int whiteCaptures=0, int blackCapture=0)
 {
     // int heuristic = centralHeuristic(currBoard, isMaximizing ? agentTile : agentTile == 1 ? 2 : 1);
     // return isMaximizing ? heuristic : -heuristic;
