@@ -1,7 +1,7 @@
 // src/components/Board.js
 import React, { useEffect, useState } from "react";
 import Square from "./Square";
-import { randomEngine, loadWasm } from "../services/Engine";
+import { loadWasm } from "../services/Engine";
 
 const BOARD_SIZE = 19;
 
@@ -11,8 +11,10 @@ const Board = ({ onMove, numMoves }) => {
   );
   const [isUserTurn, setIsUserTurn] = useState(true);
   const [penteEngine, setPenteEngine] = useState(null);
-  const [whiteCapture, setWhiteCapture] = useState(0);
-  const [blackCapture, setBlackCapture] = useState(0);
+  // const [whiteCapture, setWhiteCapture] = useState(0);
+  // const [blackCapture, setBlackCapture] = useState(0);
+  const whiteCapture = 0;
+  const blackCapture = 0;
 
   useEffect(() => {
     loadWasm().then((engine) => setPenteEngine(engine));
@@ -52,9 +54,9 @@ const Board = ({ onMove, numMoves }) => {
     // }
     // console.log(testBoard);
 
-    console.log("newSquares", newSquares);
+    // console.log("newSquares", newSquares);
 
-    console.log(numMoves?.length)
+    // console.log(numMoves?.length)
 
     const aiMove = await penteEngine.getNextMove(
       boardPtr,
@@ -76,9 +78,9 @@ const Board = ({ onMove, numMoves }) => {
     // }
     // console.log(testBoard);
 
-    console.log(aiMove);
+    // console.log(aiMove);
     coord = move2coord(aiMove);
-    console.log("aiMove", aiMove, coord);
+    // console.log("aiMove", aiMove, coord);
     onMove({ position: `${coord[0]}${coord[1]}`, player: "X" });
 
     penteEngine.free(boardPtr);
@@ -110,7 +112,7 @@ const Board = ({ onMove, numMoves }) => {
       header.push(
         <Square
           value={null}
-          key={i}
+          key={i > 7 ? String.fromCharCode(i + 66) : String.fromCharCode(i + 65)}
           header={
             i > 7 ? String.fromCharCode(i + 66) : String.fromCharCode(i + 65)
           }
@@ -126,7 +128,7 @@ const Board = ({ onMove, numMoves }) => {
     for (let i = 0; i < BOARD_SIZE; i++) {
       let row = [];
       // Add row index
-      row.push(<Square value={null} key={i} header={i + 1} />);
+      row.push(<Square value={null} key={-1} header={i + 1} />);
       for (let j = 0; j < BOARD_SIZE; j++) {
         row.push(renderSquare(i * BOARD_SIZE + j));
       }

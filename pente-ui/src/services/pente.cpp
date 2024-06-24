@@ -665,7 +665,7 @@ long long int evaluateBoard(array<array<int, 19>, 19> &currBoard, bool isMaximiz
     // return isMaximizing ? heuristic : -heuristic;
 	// slidingHeuristic heuristic(currBoard, tile, whiteCaptures, blackCapture);
 	// return isMaximizing ? heuristic.slidingWindowHeuristicFull() : -heuristic.slidingWindowHeuristicFull();
-	emscripten_console_log("Eval Board");
+	// emscripten_console_log("Eval Board");
 
     return isMaximizing ? needToWin(currBoard, tile, whiteCaptures, blackCapture) : -needToWin(currBoard, tile, whiteCaptures, blackCapture);
 
@@ -849,7 +849,7 @@ vector<pii> getChildren(array<array<int, 19>, 19> &currBoard)
 
 // MOVE ORDERING
 priority_queue<pair<long long int, pii>> moveOrderingMax(vector<pii> &children, array<array<int, 19>, 19> &board, int agentTile, bool isMaximizing, int &wCaps, int &bCaps, ZobristHash &zobrist) {
-	emscripten_console_log("Move Ordering Max");
+	// emscripten_console_log("Move Ordering Max");
     priority_queue<pair<long long int, pii>> moveOrderMax;
     int opponentTile = agentTile == 1 ? 2 : 1;
     // emscripten_console_log(("Num Child: " + to_string(children.size())).c_str());
@@ -898,13 +898,13 @@ priority_queue<pair<long long int, pii>> moveOrderingMax(vector<pii> &children, 
         zobrist.updateHash(oldHash); // revert hash
     }
 
-    emscripten_console_log(("Num Child: " + to_string(moveOrderMax.size())).c_str());
+    // emscripten_console_log(("Num Child: " + to_string(moveOrderMax.size())).c_str());
     return moveOrderMax;
 }
 
 priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderingMin(vector<pii> &children, array<array<int, 19>, 19> &board, int agentTile, bool isMaximizing, int wCaps, int bCaps, ZobristHash &zobrist)
 {
-	emscripten_console_log("Move Ordering Min");
+	// emscripten_console_log("Move Ordering Min");
 	priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Compare > moveOrderMin;
 	int opponentTile = agentTile == 1 ? 2 : 1;
  
@@ -955,7 +955,7 @@ priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Com
 
 // ALPHA BETA
 long long int alphaBeta(array<array<int, 19>, 19> &currBoard, int wCaps, int bCaps, int depth, long long int alpha, long long int beta, bool isMaximizing, int agentTile, ZobristHash &hasher, float ForwardPruningPercentage, long long int FractionalPruning) {
-	emscripten_console_log("Alpha Beta");
+	// emscripten_console_log("Alpha Beta");
 	int opponentTile = agentTile == 1 ? 2 : 1;
 
 	if (depth == 0) {
@@ -1149,16 +1149,16 @@ int getNextMove(int* boardArray, int whiteCaptures, int blackCaptures, double ti
 {
     array <array <int, 19>, 19> board;
 
-    emscripten_console_log((
-        "Agent Tile\t: " + to_string(agentTile) +
-        "\nWhite Captures\t: " + to_string(whiteCaptures) +
-        "\nBlack Captures\t: " + to_string(blackCaptures) +
-        "\nTime\t: " + to_string(time) +
-        "\nTurns\t: " + to_string(nTurns)
-        ).c_str()
-    );
+    // emscripten_console_log((
+    //     "Agent Tile\t: " + to_string(agentTile) +
+    //     "\nWhite Captures\t: " + to_string(whiteCaptures) +
+    //     "\nBlack Captures\t: " + to_string(blackCaptures) +
+    //     "\nTime\t: " + to_string(time) +
+    //     "\nTurns\t: " + to_string(nTurns)
+    //     ).c_str()
+    // );
     
-    emscripten_console_log("Board");
+    // emscripten_console_log("Board");
     for (size_t i = 0; i < 19; i++)
     {
         for (size_t j = 0; j < 19; j++)
@@ -1166,7 +1166,7 @@ int getNextMove(int* boardArray, int whiteCaptures, int blackCaptures, double ti
             board[i][j] = boardArray[i * 19 + j];
         }
     }
-    printBoardEM(board); // DEBUG
+    // printBoardEM(board); // DEBUG
     // cout<<"Board"<<endl;
 
     long long int bestValue = ninfi;
@@ -1179,7 +1179,7 @@ int getNextMove(int* boardArray, int whiteCaptures, int blackCaptures, double ti
     // cout<<centralHeuristic(board, agentTile)<<endl; // DEBUG
     if(nTurns <= 2) {
         string BEST_MOVE = getOpeningMove(nTurns, agentTile, zobristHash.hash(), board);
-        emscripten_console_log(BEST_MOVE.c_str());
+        // emscripten_console_log(BEST_MOVE.c_str());
         return position_to_index(BEST_MOVE);
     }
 
@@ -1191,7 +1191,7 @@ int getNextMove(int* boardArray, int whiteCaptures, int blackCaptures, double ti
 
     moveOrder = moveOrderingMax(children, board, agentTile, true, whiteCaptures, blackCaptures, zobristHash);
     int numChildren = children.size();
-    emscripten_console_log(("Number Children:" + to_string(numChildren)).c_str());
+    // emscripten_console_log(("Number Children:" + to_string(numChildren)).c_str());
     long long int maxHeuristic = moveOrder.top().first;
 
     // FWD PRUNING ADJUSTMENT
@@ -1261,8 +1261,8 @@ int getNextMove(int* boardArray, int whiteCaptures, int blackCaptures, double ti
     }
     // freopen("output.txt", "w", stdout);
     string BEST_MOVE = indices_to_position(bestRow, bestCol);
-    emscripten_console_log("Best Move: ");
-    emscripten_console_log(BEST_MOVE.c_str());
+    // emscripten_console_log("Best Move: ");
+    // emscripten_console_log(BEST_MOVE.c_str());
     // return position_to_index(BEST_MOVE);
     return toIndex(bestRow, bestCol);
 }
