@@ -23,8 +23,8 @@ using namespace std;
 #define MAX_DEPTH 1
 #define FWD_PRUNE_PERCENT 0.5
 
-unordered_map <uint64_t, long long int > oldTranspositionTable;
-unordered_map <uint64_t, long long int > newTranspositionTable;
+// unordered_map <uint64_t, long long int > oldTranspositionTable;
+// unordered_map <uint64_t, long long int > newTranspositionTable;
 // unordered_map <uint64_t, string > openingMoves;
 // vector<vector<int>> board(19, vector<int>(19, 0));
 
@@ -910,22 +910,22 @@ priority_queue <pair<long long int, pii>, vector<pair<long long int, pii> >, Com
 		uint64_t newHash;
 		pair<int, uint64_t> temp;
 
-		tie(currBoard, temp) = checkCaptures(board, children[i].first, children[i].second, opponentTile, zobrist);
-		tie(numCaptures, newHash) = temp;
+		tie(numCaptures, newHash) = checkCaptures(board, children[i].first, children[i].second, opponentTile, zobrist);
 
 		opponentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
 		// zobrist.updateHash(newHash); // update hash
-
-		if(oldTranspositionTable[newHash] == 0) {
 			heuristic = evaluateBoard(currBoard, isMaximizing, opponentTile, wCaps, bCaps); // Heuristic
-			oldTranspositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
-			newTranspositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
-			// transpositionTable2[newHash] = make_pair(heuristic == 0 ? 1 : heuristic, children[i]);
-		}
-		else {
-			heuristic = oldTranspositionTable[newHash];
-            newTranspositionTable[newHash] = oldTranspositionTable[newHash];
-        }
+
+		// if(oldTranspositionTable[newHash] == 0) {
+		// 	heuristic = evaluateBoard(currBoard, isMaximizing, opponentTile, wCaps, bCaps); // Heuristic
+		// 	oldTranspositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
+		// 	newTranspositionTable[newHash] = heuristic == 0 ? 1 : heuristic;
+		// 	// transpositionTable2[newHash] = make_pair(heuristic == 0 ? 1 : heuristic, children[i]);
+		// }
+		// else {
+		// 	heuristic = oldTranspositionTable[newHash];
+    //         newTranspositionTable[newHash] = oldTranspositionTable[newHash];
+    //     }
 		// cout<<children[i].first<<" "<<children[i].second<<" "<<heuristic<<endl; // DEBUG
 		
 		moveOrderMin.push(make_pair(heuristic, children[i]));
@@ -942,13 +942,13 @@ long long int alphaBeta(array<array<int, 19>, 19> currBoard, int wCaps, int bCap
     int opponentTile = agentTile == 1 ? 2 : 1;
 
     if (depth == 0) {
-		if(oldTranspositionTable[hasher.hash()] == 0) {
+		// if(oldTranspositionTable[hasher.hash()] == 0) {
 	    	long long int value = evaluateBoard(currBoard, isMaximizing, isMaximizing ? agentTile : opponentTile , wCaps, bCaps);
-            newTranspositionTable[hasher.hash()] = value == 0 ? 1 : value;
+            // newTranspositionTable[hasher.hash()] = value == 0 ? 1 : value;
             return value;
-        }
-        newTranspositionTable[hasher.hash()] = oldTranspositionTable[hasher.hash()];
-		return oldTranspositionTable[hasher.hash()];
+        // }
+		// newTranspositionTable[hasher.hash()] = oldTranspositionTable[hasher.hash()];
+		// return oldTranspositionTable[hasher.hash()];
 	}
 	
 	vector<pii> children(0);
@@ -988,8 +988,7 @@ long long int alphaBeta(array<array<int, 19>, 19> currBoard, int wCaps, int bCap
 			uint64_t hash;
 			pair<int, uint64_t> temp;
 
-            tie(newBoard, temp) = checkCaptures(currBoard, child.first, child.second, agentTile, hasher);
-			tie(numCaptures, hash) = temp;
+			tie(numCaptures, hash) = checkCaptures(currBoard, child.first, child.second, agentTile, hasher);
 
             agentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
             if(checkWin(newBoard, wCaps, bCaps, agentTile, child.first, child.second))
@@ -1042,8 +1041,7 @@ long long int alphaBeta(array<array<int, 19>, 19> currBoard, int wCaps, int bCap
 			uint64_t hash;
 			pair<int, uint64_t> temp;
 
-            tie(newBoard, temp) = checkCaptures(currBoard, child.first, child.second, opponentTile, hasher);
-			tie(numCaptures, hash) = temp;
+			tie(numCaptures, hash) = checkCaptures(currBoard, child.first, child.second, opponentTile, hasher);
 
 			// ?CHECK IF NEXT LINE IS CORRECT
             opponentTile == 1 ? bCaps += numCaptures : wCaps += numCaptures;
@@ -1248,8 +1246,7 @@ int getNextMove(int* boardArray, int whiteCaptures, int blackCaptures, double ti
         uint64_t hash;
         pair<int, uint64_t> temp;
 
-        tie(currBoard, temp) = checkCaptures(currBoard, child.first, child.second, agentTile, zobristHash);
-        tie(numCaps, hash) = temp;
+        tie(numCaps, hash) = checkCaptures(currBoard, child.first, child.second, agentTile, zobristHash);
         agentTile == 1 ? blackCaptures += numCaps : whiteCaptures += numCaps;
         if(checkWin(currBoard, whiteCaptures, blackCaptures, agentTile, child.first, child.second))
         {
