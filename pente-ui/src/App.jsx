@@ -23,6 +23,26 @@ const App = () => {
     return [z, y + 1];
   };
 
+  const handlePlayerSwitch = () => {
+    setMoves([]);
+    const squares = Array(BOARD_SIZE * BOARD_SIZE).fill(null);
+    setSquares(squares);
+    setWhiteCapture(0);
+    setBlackCapture(0);
+
+    if (player === 2) {
+      handleMove(180, 2, squares);
+    }
+    setPlayer(oppColor(player));
+  };
+
+  const resetGame = () => {
+    setSquares(Array(BOARD_SIZE * BOARD_SIZE).fill(null));
+    setMoves([]);
+    setWhiteCapture(0);
+    setBlackCapture(0);
+  };
+
   function checkCaptures(move, player, squares) {
     const opponent = player === 1 ? 2 : 1;
     const directions = [
@@ -137,7 +157,10 @@ const App = () => {
     newSquares[move] = player;
 
     const coord = move2coord(move);
-    setMoves((moves) => [...moves, { position: `${coord[0]}${coord[1]}`, player }]);
+    setMoves((moves) => [
+      ...moves,
+      { position: `${coord[0]}${coord[1]}`, player },
+    ]);
 
     const captures = checkCaptures(move, player, newSquares);
     if (captures.length > 0) {
@@ -160,17 +183,6 @@ const App = () => {
     return newSquares;
   };
 
-  useEffect(() => {
-    if(player === 1) {
-      const squares = Array(BOARD_SIZE * BOARD_SIZE).fill(null);
-      handleMove(180, 2, squares);
-    }
-    else if(player === 2) {
-      setSquares(Array(BOARD_SIZE * BOARD_SIZE).fill(null));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player]);
-
   return (
     <div className="App">
       <h1>Pente Game</h1>
@@ -191,10 +203,10 @@ const App = () => {
             <span>Player: X</span>
             <span>AI: O</span>
           </div>
-          <button>Restart</button>
+          <button onClick={resetGame}>Restart</button>
           <button>Undo</button>
           <button>Change Game</button>
-          <button onClick={() => setPlayer(oppColor(player))}>
+          <button onClick={handlePlayerSwitch}>
             Play as {playerColor(oppColor(player))}
           </button>
           <MovesTable moves={moves} />
