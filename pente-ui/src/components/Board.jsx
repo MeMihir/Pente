@@ -19,6 +19,43 @@ const Board = ({ onMove, numMoves, playerTile }) => {
     loadWasm().then((engine) => setPenteEngine(engine));
   }, []);
 
+  const handleMove = (move, player, squares) => {
+    console.log(move, player);
+    let newSquares = squares.slice();
+    newSquares[move] = player;
+    
+    const coord = move2coord(move);
+    onMove({ position: `${coord[0]}${coord[1]}`, player });
+    
+    const captures = checkCaptures(move, player, newSquares);
+    if (captures.length > 0) {
+      if (player === 1) {
+        setWhiteCapture(whiteCapture + captures.length / 2);
+      } else {
+        setBlackCapture(blackCapture + captures.length / 2);
+      }
+      captures.forEach((capture) => {
+        newSquares[capture] = null;
+      });
+    }
+
+    setSquares(newSquares);
+
+    if (checkWin(move, player, squares)) {
+      alert(`Player ${player === 1 ? "O" : "X"} wins!`);
+    }
+
+    return newSquares;
+  };
+
+  useEffect(() => {
+    if (playerTile === 1) {
+      const squares = Array(BOARD_SIZE * BOARD_SIZE).fill(null);
+      handleMove(180, 2, squares);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerTile])
+
   const move2coord = (move) => {
     const x = move % BOARD_SIZE;
     const y = Math.floor(move / BOARD_SIZE);
@@ -108,34 +145,6 @@ const Board = ({ onMove, numMoves, playerTile }) => {
     return false;
   };
 
-  const handleMove = (move, player, squares) => {
-    console.log(move, player);
-    let newSquares = squares.slice();
-    newSquares[move] = player;
-    
-    const coord = move2coord(move);
-    onMove({ position: `${coord[0]}${coord[1]}`, player });
-    
-    const captures = checkCaptures(move, player, newSquares);
-    if (captures.length > 0) {
-      if (player === 1) {
-        setWhiteCapture(whiteCapture + captures.length / 2);
-      } else {
-        setBlackCapture(blackCapture + captures.length / 2);
-      }
-      captures.forEach((capture) => {
-        newSquares[capture] = null;
-      });
-    }
-
-    setSquares(newSquares);
-
-    if (checkWin(move, player, squares)) {
-      alert(`Player ${player === 1 ? "O" : "X"} wins!`);
-    }
-
-    return newSquares;
-  }
 
   // const printBoard = () => {
   //   let board = [];
