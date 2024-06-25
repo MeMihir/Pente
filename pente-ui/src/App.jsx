@@ -1,5 +1,5 @@
 // src/App.js
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Board from "./components/Board";
 import "./App.css";
 import MovesTable from "./components/MovesTable";
@@ -200,12 +200,18 @@ const App = () => {
         />
         <div className="game-info">
           <div>
-            <span>Player: X</span>
+            <span>Player: {}</span>
             <span>AI: O</span>
           </div>
           <button onClick={resetGame}>Restart</button>
           <button>Undo</button>
-          <button>Change Game</button>
+          <a
+            href="https://winning-moves.com/images/PenteRules.pdf"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <button>Learn To Play</button>
+          </a>
           <button onClick={handlePlayerSwitch}>
             Play as {playerColor(oppColor(player))}
           </button>
