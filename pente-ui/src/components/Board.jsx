@@ -6,14 +6,19 @@ import { oppColor } from "../util";
 
 const BOARD_SIZE = 19;
 
-const Board = ({ onMove, numMoves, playerTile }) => {
-  const [squares, setSquares] = useState(
-    Array(BOARD_SIZE * BOARD_SIZE).fill(null)
-  );
+const Board = ({
+  onMove,
+  numMoves,
+  playerTile,
+  squares,
+  setSquares,
+  whiteCapture,
+  setWhiteCapture,
+  blackCapture,
+  setBlackCapture,
+}) => {
   const [isUserTurn, setIsUserTurn] = useState(true);
   const [penteEngine, setPenteEngine] = useState(null);
-  const [whiteCapture, setWhiteCapture] = useState(0);
-  const [blackCapture, setBlackCapture] = useState(0);
 
   useEffect(() => {
     loadWasm().then((engine) => setPenteEngine(engine));
@@ -23,10 +28,10 @@ const Board = ({ onMove, numMoves, playerTile }) => {
     console.log(move, player);
     let newSquares = squares.slice();
     newSquares[move] = player;
-    
+
     const coord = move2coord(move);
     onMove({ position: `${coord[0]}${coord[1]}`, player });
-    
+
     const captures = checkCaptures(move, player, newSquares);
     if (captures.length > 0) {
       if (player === 1) {
@@ -53,8 +58,8 @@ const Board = ({ onMove, numMoves, playerTile }) => {
       const squares = Array(BOARD_SIZE * BOARD_SIZE).fill(null);
       handleMove(180, 2, squares);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playerTile])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playerTile]);
 
   const move2coord = (move) => {
     const x = move % BOARD_SIZE;
@@ -65,29 +70,47 @@ const Board = ({ onMove, numMoves, playerTile }) => {
 
   function checkCaptures(move, player, squares) {
     const opponent = player === 1 ? 2 : 1;
-    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1]];
+    const directions = [
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1],
+      [-1, -1],
+      [1, 1],
+      [-1, 1],
+      [1, -1],
+    ];
     let captures = [];
 
     const x = move % BOARD_SIZE;
     const y = Math.floor(move / BOARD_SIZE);
 
     for (let [dx, dy] of directions) {
-        const nx1 = x + dx;
-        const ny1 = y + dy;
-        const nx2 = x + 2*dx;
-        const ny2 = y + 2*dy;
-        const nx3 = x + 3*dx;
-        const ny3 = y + 3*dy;
-        if (
-            nx1 >= 0 && nx1 < BOARD_SIZE && ny1 >= 0 && ny1 < BOARD_SIZE &&
-            nx2 >= 0 && nx2 < BOARD_SIZE && ny2 >= 0 && ny2 < BOARD_SIZE &&
-            nx3 >= 0 && nx3 < BOARD_SIZE && ny3 >= 0 && ny3 < BOARD_SIZE &&
-            squares[ny1 * BOARD_SIZE + nx1] === opponent &&
-            squares[ny2 * BOARD_SIZE + nx2] === opponent &&
-            squares[ny3 * BOARD_SIZE + nx3] === player
-        ) {
-            captures.push(ny1 * BOARD_SIZE + nx1, ny2 * BOARD_SIZE + nx2);
-        }
+      const nx1 = x + dx;
+      const ny1 = y + dy;
+      const nx2 = x + 2 * dx;
+      const ny2 = y + 2 * dy;
+      const nx3 = x + 3 * dx;
+      const ny3 = y + 3 * dy;
+      if (
+        nx1 >= 0 &&
+        nx1 < BOARD_SIZE &&
+        ny1 >= 0 &&
+        ny1 < BOARD_SIZE &&
+        nx2 >= 0 &&
+        nx2 < BOARD_SIZE &&
+        ny2 >= 0 &&
+        ny2 < BOARD_SIZE &&
+        nx3 >= 0 &&
+        nx3 < BOARD_SIZE &&
+        ny3 >= 0 &&
+        ny3 < BOARD_SIZE &&
+        squares[ny1 * BOARD_SIZE + nx1] === opponent &&
+        squares[ny2 * BOARD_SIZE + nx2] === opponent &&
+        squares[ny3 * BOARD_SIZE + nx3] === player
+      ) {
+        captures.push(ny1 * BOARD_SIZE + nx1, ny2 * BOARD_SIZE + nx2);
+      }
     }
 
     return captures;
@@ -106,7 +129,16 @@ const Board = ({ onMove, numMoves, playerTile }) => {
     }
 
     // 5 in a row / column / diagonal
-    const directions = [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [1, 1], [-1, 1], [1, -1]];
+    const directions = [
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1],
+      [-1, -1],
+      [1, 1],
+      [-1, 1],
+      [1, -1],
+    ];
     const x = move % BOARD_SIZE;
     const y = Math.floor(move / BOARD_SIZE);
 
@@ -145,7 +177,6 @@ const Board = ({ onMove, numMoves, playerTile }) => {
     return false;
   };
 
-
   // const printBoard = () => {
   //   let board = [];
   //   for (let i = 0; i < BOARD_SIZE; i++) {
@@ -158,14 +189,13 @@ const Board = ({ onMove, numMoves, playerTile }) => {
   //   console.log(board);
   // };
 
-
   // useEffect(() => {
   //   printBoard();
   // }, [squares]);
 
   const handleClick = async (i) => {
     if (squares[i] || !isUserTurn || !penteEngine) return;
-    
+
     const newSquares = handleMove(i, playerTile, squares.slice());
     setIsUserTurn(false);
 
@@ -173,8 +203,11 @@ const Board = ({ onMove, numMoves, playerTile }) => {
       BOARD_SIZE * BOARD_SIZE * Int32Array.BYTES_PER_ELEMENT
     );
 
-    penteEngine.HEAP32.set(new Int32Array(newSquares), boardPtr / Int32Array.BYTES_PER_ELEMENT);
-    
+    penteEngine.HEAP32.set(
+      new Int32Array(newSquares),
+      boardPtr / Int32Array.BYTES_PER_ELEMENT
+    );
+
     // let testBoard = [];
     // for (let i = 0; i < 19; i++) {
     //   const row = [];
@@ -196,7 +229,7 @@ const Board = ({ onMove, numMoves, playerTile }) => {
       blackCapture,
       300,
       oppColor(playerTile),
-      Math.ceil(numMoves?.length/2)+1
+      Math.ceil(numMoves?.length / 2) + 1
     );
 
     // testBoard = [];
@@ -239,7 +272,9 @@ const Board = ({ onMove, numMoves, playerTile }) => {
       header.push(
         <Square
           value={null}
-          key={i > 7 ? String.fromCharCode(i + 66) : String.fromCharCode(i + 65)}
+          key={
+            i > 7 ? String.fromCharCode(i + 66) : String.fromCharCode(i + 65)
+          }
           header={
             i > 7 ? String.fromCharCode(i + 66) : String.fromCharCode(i + 65)
           }
