@@ -2,10 +2,11 @@
 import React, { useEffect, useState } from "react";
 import Square from "./Square";
 import { loadWasm } from "../services/Engine";
+import { oppColor } from "../util";
 
 const BOARD_SIZE = 19;
 
-const Board = ({ onMove, numMoves }) => {
+const Board = ({ onMove, numMoves, playerTile }) => {
   const [squares, setSquares] = useState(
     Array(BOARD_SIZE * BOARD_SIZE).fill(null)
   );
@@ -108,10 +109,14 @@ const Board = ({ onMove, numMoves }) => {
   };
 
   const handleMove = (move, player, squares) => {
+    console.log(move, player);
+    let newSquares = squares.slice();
+    newSquares[move] = player;
+    
     const coord = move2coord(move);
     onMove({ position: `${coord[0]}${coord[1]}`, player });
-    const captures = checkCaptures(move, player, squares);
-
+    
+    const captures = checkCaptures(move, player, newSquares);
     if (captures.length > 0) {
       if (player === 1) {
         setWhiteCapture(whiteCapture + captures.length / 2);
@@ -119,16 +124,17 @@ const Board = ({ onMove, numMoves }) => {
         setBlackCapture(blackCapture + captures.length / 2);
       }
       captures.forEach((capture) => {
-        squares[capture] = null;
+        newSquares[capture] = null;
       });
-      setSquares(squares);
     }
+
+    setSquares(newSquares);
 
     if (checkWin(move, player, squares)) {
       alert(`Player ${player === 1 ? "O" : "X"} wins!`);
     }
 
-    return squares;
+    return newSquares;
   }
 
   // const printBoard = () => {
@@ -150,12 +156,9 @@ const Board = ({ onMove, numMoves }) => {
 
   const handleClick = async (i) => {
     if (squares[i] || !isUserTurn || !penteEngine) return;
-
-    let newSquares = squares.slice();
-    newSquares[i] = 2; // User's move
-    setSquares(newSquares);
+    
+    const newSquares = handleMove(i, playerTile, squares.slice());
     setIsUserTurn(false);
-    newSquares = handleMove(i, 2, newSquares);
 
     const boardPtr = penteEngine.malloc(
       BOARD_SIZE * BOARD_SIZE * Int32Array.BYTES_PER_ELEMENT
@@ -183,7 +186,7 @@ const Board = ({ onMove, numMoves }) => {
       whiteCapture,
       blackCapture,
       300,
-      1,
+      oppColor(playerTile),
       Math.ceil(numMoves?.length/2)+1
     );
 
@@ -203,11 +206,8 @@ const Board = ({ onMove, numMoves }) => {
     penteEngine.free(boardPtr);
 
     if (aiMove !== -1) {
-      newSquares[aiMove] = 1; // AI's move
-      setSquares(newSquares);
+      handleMove(aiMove, oppColor(playerTile), newSquares);
     }
-    handleMove(aiMove, 1, newSquares);
-
     setIsUserTurn(true);
   };
 
