@@ -78,6 +78,7 @@
 .game-info {
   display: inline-block;
   text-align: left;
+  
 }
 
 button {
@@ -123,4 +124,29 @@ button:hover {
 
 .moves-table tr:hover {
   background-color: #ddd;
+}
+
+.playerCards {
+  display: flex;
+  justify-content: space-around;
+}
+
+.playerCard {
+  display: inline-block;
+  margin-right: 20px;
+  /* background-color: #f0d9b5; */
+  padding: 10px;
+  text-align: center;
+}
+
+.playerCard.Black {
+  background-color: #000;
+  color: #fff;
+  border: 2px solid #000;
+}
+
+.playerCard.White {
+  background-color: #fff;
+  border: 2px solid #000;
+  color: #000;
 }

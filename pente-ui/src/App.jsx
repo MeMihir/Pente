@@ -222,9 +222,15 @@ const App = () => {
           setMovesStack={setMovesStack}
         />
         <div className="game-info">
-          <div>
-            <span>Player: {}</span>
-            <span>AI: O</span>
+          <div className="playerCards" >
+            <div className={`playerCard ${playerColor(player)}`} >
+              <h2>Player</h2>
+              <h3>Captures {playerColor(player) === 1 ? whiteCapture : blackCapture } </h3>
+            </div>
+            <div className={`playerCard ${playerColor(oppColor(player))}`}  >
+              <h2>AI Agent</h2>
+              <h3>Captures {playerColor(player) === 1 ? blackCapture : whiteCapture} </h3>
+            </div>
           </div>
           <button onClick={resetGame}>Restart</button>
           <button onClick={handleUndo} >Undo</button>
