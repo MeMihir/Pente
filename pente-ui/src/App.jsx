@@ -15,6 +15,7 @@ const App = () => {
   const [player, setPlayer] = useState(2);
   const [whiteCapture, setWhiteCapture] = useState(0);
   const [blackCapture, setBlackCapture] = useState(0);
+  const [movesStack, setMovesStack] = useState([]);
 
   const move2coord = (move) => {
     const x = move % BOARD_SIZE;
@@ -152,7 +153,26 @@ const App = () => {
     return false;
   };
 
-  const handleMove = (move, player, squares) => {
+  const handleUndo = () => {
+    if (movesStack.length === 0) {
+      return;
+    }
+    const lastMove = movesStack.pop().reverse();
+    let newSquares = squares.slice();
+    
+    lastMove.forEach((move) => {
+      if (move.move > 0) {
+        newSquares[move.move] = null;
+      } else {
+        newSquares[-move.move] = oppColor(move.player);
+      }
+    });
+    setSquares(newSquares);
+    setMovesStack(movesStack);
+    setMoves((moves) => moves.slice(0, moves.length - 2));
+  }
+
+  const handleMove = (move, player, squares, currentTurn = []) => {
     let newSquares = squares.slice();
     newSquares[move] = player;
 
@@ -161,6 +181,7 @@ const App = () => {
       ...moves,
       { position: `${coord[0]}${coord[1]}`, player },
     ]);
+    currentTurn.push({ move, player });
 
     const captures = checkCaptures(move, player, newSquares);
     if (captures.length > 0) {
@@ -170,7 +191,8 @@ const App = () => {
         setBlackCapture(blackCapture + captures.length / 2);
       }
       captures.forEach((capture) => {
-        newSquares[capture] = null;
+        newSquares[capture] = null; 
+        currentTurn.push({ move: -capture, player });
       });
     }
 
@@ -180,7 +202,7 @@ const App = () => {
       alert(`Player ${player === 1 ? "O" : "X"} wins!`);
     }
 
-    return newSquares;
+    return {newSquares, currentTurn};
   };
 
   return (
@@ -197,6 +219,7 @@ const App = () => {
           blackCapture={blackCapture}
           setWhiteCapture={setWhiteCapture}
           setBlackCapture={setBlackCapture}
+          setMovesStack={setMovesStack}
         />
         <div className="game-info">
           <div>
@@ -204,7 +227,7 @@ const App = () => {
             <span>AI: O</span>
           </div>
           <button onClick={resetGame}>Restart</button>
-          <button>Undo</button>
+          <button onClick={handleUndo} >Undo</button>
           <a
             href="https://winning-moves.com/images/PenteRules.pdf"
             target="_blank"

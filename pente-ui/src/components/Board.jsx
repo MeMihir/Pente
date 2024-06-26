@@ -12,6 +12,7 @@ const Board = ({
   playerTile,
   squares,
   setSquares,
+  setMovesStack,
   whiteCapture,
   blackCapture,
 }) => {
@@ -41,7 +42,7 @@ const Board = ({
   const handleClick = async (i) => {
     if (squares[i] || !isUserTurn || !penteEngine) return;
 
-    const newSquares = handleMove(i, playerTile, squares.slice());
+    const { newSquares, currentTurn } = handleMove(i, playerTile, squares.slice(), []);
     setIsUserTurn(false);
 
     const boardPtr = penteEngine.malloc(
@@ -93,7 +94,8 @@ const Board = ({
     penteEngine.free(boardPtr);
 
     if (aiMove !== -1) {
-      handleMove(aiMove, oppColor(playerTile), newSquares);
+      const move = handleMove(aiMove, oppColor(playerTile), newSquares, currentTurn);
+      setMovesStack(movesStack => [...movesStack, move.currentTurn]);
     }
     setIsUserTurn(true);
   };
